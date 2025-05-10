@@ -51,6 +51,12 @@ nav ul li a {
   display: block;
 }
 
+nav ul li a:hover {
+  color: #0ff;
+  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff;
+  transform: scale(1.1);
+}
+
 .highlight {
   color: #00bfff; /* bright blue */
   font-size: 1.8rem;
