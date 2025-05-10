@@ -4,3 +4,181 @@
 *:after {
   box-sizing: border-box;
 }
+
+/* Global styles */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-image: url("../images/site/checkerboard.jpg");
+  background-size: 80px 80px;
+  background-repeat: repeat;
+}
+
+/* Constrain content */
+.wrapper {
+  background-color: white;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 3px solid #00cfff; /* optional: border like the example */
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+
+/* Header and nav */
+#top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid lightblue;
+}
+
+nav ul {
+  display: flex;
+  justify-content: space-around;
+  background-color: #333;
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+nav ul li a {
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  display: block;
+}
+
+.highlight {
+  color: #00bfff; /* bright blue */
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Main showcase */
+.showcase {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.showcase-text {
+  flex: 1;
+  min-width: 250px;
+}
+
+.showcase-text ul {
+  list-style: none;
+  padding-left: 0;
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+.showcase-text ul li {
+  margin-bottom: 0.3rem;
+}
+
+.car-image {
+  flex: 1;
+  max-width: 800px;
+  height: auto;
+  display: block;
+}
+
+/* CTA Button */
+.cta {
+  background-color: #00bfff;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.cta:hover {
+  background-color: #009acd;
+}
+
+/* Upgrade and reviews section */
+
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.upgrades, .reviews {
+  flex: 1;
+}
+
+.upgrades h2 {
+  margin-bottom: 1rem;
+}
+
+.upgrades .grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  gap: 1.5rem;
+}
+
+.upgrades a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background-color: #e0f7ff; /* Light blue like your screenshot */
+  border: 2px solid #00cfff;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  color: #003366;
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+.upgrades a:hover {
+  transform: scale(1.05);
+}
+
+.upgrades img {
+  max-width: 100px;
+  margin-bottom: 0.5rem;
+}
+
+/* Reviews */
+.reviews ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  background-color: white;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 3px solid #00cfff;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .showcase {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .columns {
+    flex-direction: column;
+  }
+}
