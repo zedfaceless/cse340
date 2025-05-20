@@ -7,7 +7,7 @@ DROP TYPE IF EXISTS public.account_type;
 CREATE TYPE public.account_type AS ENUM(
 	'Client'
 	'Employee'
-	'Admin');
+	'Admin'); 
 
 -- Create classification table 
 CREATE TABLE IF NOT EXISTS public.classification (
