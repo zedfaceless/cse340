@@ -3,6 +3,7 @@
  * application. It is used to control the project.
  *******************************************/
 
+const baseController = require("./controllers/baseController")
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const path = require("path");
@@ -24,9 +25,7 @@ app.use(staticRoutes);
 /* ***********************
  * Index route
  *************************/
-app.get("/", function (req, res) {
-  res.render("layouts/index", { title: "Home" });
-});
+app.get("/", baseController.buildHome)
 
 /* ***********************
  * Local Server Information
