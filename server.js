@@ -3,11 +3,12 @@
  * application. It is used to control the project.
  *******************************************/
 
-const baseController = require("./controllers/baseController")
+const baseController = require("./controllers/baseController");
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const path = require("path");
 const env = require("dotenv").config();
+const utilities = require("./utilities/"); // <-- make sure this is required here for getNav()
 const app = express();
 const staticRoutes = require("./routes/static");
 
@@ -25,7 +26,7 @@ app.use(staticRoutes);
 /* ***********************
  * Index route
  *************************/
-app.get("/", baseController.buildHome)
+app.get("/", baseController.buildHome);
 
 /* ***********************
  * Local Server Information
@@ -38,4 +39,26 @@ const host = process.env.HOST || "localhost";
  *************************/
 app.listen(port, () => {
   console.log(`App listening on http://${host}:${port}`);
+});
+
+/* ***********************
+ * File Not Found Route - must be last route in list
+ *************************/
+app.use(async (req, res, next) => {
+  next({ status: 404, message: 'Sorry, we appear to have lost that page.' });
+});
+
+/* ***********************
+ * Express Error Handler
+ * Place after all other middleware
+ *************************/
+app.use(async (err, req, res, next) => {
+  const nav = await utilities.getNav();
+  console.error(`Error at: "${req.originalUrl}": ${err.message}`);
+  const status = err.status || 500;
+  res.status(status).render("errors/error", {
+    title: `${status} Error`,
+    message: err.message,
+    nav,
+  });
 });
