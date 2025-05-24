@@ -1,16 +1,20 @@
-/******************************************
- * This server.js file is the primary file of the 
- * application. It is used to control the project.
- *******************************************/
-
 const baseController = require("./controllers/baseController");
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const path = require("path");
 const env = require("dotenv").config();
-const utilities = require("./utilities/"); // <-- make sure this is required here for getNav()
+const utilities = require("./utilities/");
 const app = express();
 const staticRoutes = require("./routes/static");
+const inventoryRouter = require("./routes/inventory");
+
+// Make nav available to all views
+app.use(async (req, res, next) => {
+  res.locals.nav = await utilities.getNav();
+  next();
+});
+
+app.use("/inventory", inventoryRouter);
 
 // Set the view engine and views folder
 app.set("view engine", "ejs");
@@ -23,35 +27,24 @@ app.set("layout", "./layouts/layout");
 // Static file routes
 app.use(staticRoutes);
 
-/* ***********************
- * Index route
- *************************/
+// Index route
 app.get("/", utilities.handleErrors(baseController.buildHome));
 
-/* ***********************
- * Local Server Information
- *************************/
+// Local Server Information
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || "localhost";
 
-/* ***********************
- * Log statement to confirm server operation
- *************************/
+// Start server
 app.listen(port, () => {
   console.log(`App listening on http://${host}:${port}`);
 });
 
-/* ***********************
- * File Not Found Route - must be last route in list
- *************************/
+// File Not Found Route - must be last route in list
 app.use(async (req, res, next) => {
   next({ status: 404, message: 'Sorry, we appear to have lost that page.' });
 });
 
-/* ***********************
- * Express Error Handler
- * Place after all other middleware
- *************************/
+// Express Error Handler
 app.use(async (err, req, res, next) => {
   let nav = await utilities.getNav()
   console.error(`Error at: "${req.originalUrl}": ${err.message}`)
@@ -61,4 +54,4 @@ app.use(async (err, req, res, next) => {
     message,
     nav
   })
-})
+});
