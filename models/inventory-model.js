@@ -1,5 +1,3 @@
-const pool = require('../database/connection'); // Adjust path if needed
-
 async function getVehicleById(inv_id) {
   try {
     const sql = 'SELECT * FROM inventory WHERE inv_id = $1';

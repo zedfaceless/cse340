@@ -204,6 +204,32 @@ footer {
   margin-bottom: 1rem;
 }
 
+.tab-buttons {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 1em 0;
+  border-bottom: 2px solid #ccc;
+}
+.tab-btn {
+  padding: 10px 20px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+.tab-btn.active {
+  border-bottom: 3px solid #333;
+  font-weight: bold;
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+  margin-top: 1em;
+}
+
+
 
 /* Responsive */
 @media screen and (max-width: 768px) {

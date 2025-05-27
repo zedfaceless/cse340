@@ -6,7 +6,8 @@ const env = require("dotenv").config();
 const utilities = require("./utilities/");
 const app = express();
 const staticRoutes = require("./routes/static");
-const invRouter = require("./routes/inventory"); // Renamed for clarity
+const inventoryRouter = require('./routes/inventory');
+
 
 // Make nav available to all views
 app.use(async (req, res, next) => {
@@ -14,8 +15,10 @@ app.use(async (req, res, next) => {
   next();
 });
 
+app.use(express.static('public'));
+
 // Mount inventory routes at /inv (this fixes your navigation route issue)
-app.use("/inv", invRouter);
+app.use('/inventory', inventoryRouter);
 
 // Set the view engine and views folder
 app.set("view engine", "ejs");
@@ -32,7 +35,7 @@ app.use(staticRoutes);
 app.get("/", utilities.handleErrors(baseController.buildHome));
 
 // Local Server Information
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5500;
 const host = process.env.HOST || "localhost";
 
 // Start server
