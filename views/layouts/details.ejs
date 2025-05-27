@@ -1,17 +1,76 @@
-<div class="tabs">
-  <ul class="tab-buttons">
-    <li class="tab-btn active" data-tab="description">Description</li>
-    <li class="tab-btn" data-tab="specifications">Specifications</li>
-    <li class="tab-btn" data-tab="reviews">Reviews</li>
-  </ul>
+<%- include('../partials/header') %>
 
-  <div class="tab-content active" id="description">
-    <p><!-- Vehicle description here --></p>
+<main class="vehicle-detail-container" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+  <h1><%= vehicle.inv_make %> <%= vehicle.inv_model %></h1>
+
+  <div class="vehicle-detail-grid" style="display: flex; gap: 40px; align-items: flex-start;">
+    <!-- Vehicle Image -->
+    <div class="vehicle-image" style="flex: 1;">
+      <% if (vehicle.inv_image) { %>
+        <img 
+          src="<%= vehicle.inv_image.startsWith('/') ? vehicle.inv_image : '/' + vehicle.inv_image %>" 
+          alt="Image of <%= vehicle.inv_make %> <%= vehicle.inv_model %>" 
+          style="max-width: 100%; border: 1px solid #ccc;"
+          onerror="this.onerror=null;this.src='/images/vehicles/placeholder.jpg';"
+        >
+      <% } else { %>
+        <p>No image available</p>
+      <% } %>
+    </div>
+
+    <!-- Vehicle Tabs -->
+    <div class="tabs" style="flex: 1;">
+      <ul class="tab-buttons" style="display: flex; list-style: none; padding: 0; margin-bottom: 20px; gap: 10px;">
+        <li class="tab-btn active" data-tab="description" style="cursor: pointer; padding: 10px 20px; border: 1px solid #ccc; border-bottom: none; background-color: #eee;">Description</li>
+        <li class="tab-btn" data-tab="specifications" style="cursor: pointer; padding: 10px 20px; border: 1px solid #ccc; border-bottom: none;">Specifications</li>
+        <li class="tab-btn" data-tab="reviews" style="cursor: pointer; padding: 10px 20px; border: 1px solid #ccc; border-bottom: none;">Reviews</li>
+      </ul>
+
+      <div class="tab-content active" id="description" style="border: 1px solid #ccc; padding: 15px;">
+        <p><%= vehicle.inv_description %></p>
+      </div>
+
+      <div class="tab-content" id="specifications" style="border: 1px solid #ccc; padding: 15px; display: none;">
+        <ul>
+          <li><strong>Year:</strong> <%= vehicle.inv_year %></li>
+          <li><strong>Price:</strong> 
+            <% const formattedPrice = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(vehicle.inv_price); %>
+            <%= formattedPrice %>
+          </li>
+          <li><strong>Mileage:</strong> 
+            <% const formattedMiles = new Intl.NumberFormat('en-US').format(vehicle.inv_miles); %>
+            <%= formattedMiles %> miles
+          </li>
+          <li><strong>Color:</strong> <%= vehicle.inv_color %></li>
+        </ul>
+      </div>
+
+      <div class="tab-content" id="reviews" style="border: 1px solid #ccc; padding: 15px; display: none;">
+        <p>No reviews yet. Be the first to review this vehicle!</p>
+      </div>
+    </div>
   </div>
-  <div class="tab-content" id="specifications">
-    <p><!-- Vehicle specifications here --></p>
-  </div>
-  <div class="tab-content" id="reviews">
-    <p><!-- Vehicle reviews here --></p>
-  </div>
-</div>
+</main>
+
+<%- include('../partials/footer') %>
+
+<script>
+  // Simple tab switching logic
+  const tabs = document.querySelectorAll('.tab-btn');
+  const contents = document.querySelectorAll('.tab-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active class from all tabs
+      tabs.forEach(t => t.classList.remove('active'));
+      // Hide all tab contents
+      contents.forEach(c => c.style.display = 'none');
+
+      // Activate clicked tab
+      tab.classList.add('active');
+      // Show corresponding content
+      const tabId = tab.getAttribute('data-tab');
+      document.getElementById(tabId).style.display = 'block';
+    });
+  });
+</script>

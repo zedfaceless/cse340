@@ -1,40 +1,25 @@
 const invModel = require("../models/inventory-model");
 
-const Util = {};
-
-/* ************************
- * Constructs the nav HTML unordered list
- ************************** */
-Util.getNav = async function () {
+async function getNav() {
   try {
-    let data = await invModel.getClassifications(); // data is an array
-    let list = "<ul>";
-    list += '<li><a href="/" title="Home page">Home</a></li>';
-    data.forEach((row) => {
-      list += "<li>";
-      list +=
-        '<a href="/inventory/type/' +
-        row.classification_id +
-        '" title="See our inventory of ' +
-        row.classification_name +
-        ' vehicles">' +
-        row.classification_name +
-        "</a>";
-      list += "</li>";
-    });
-    list += "</ul>";
-    return list;
-  } catch (error) {
-    console.error("Error building nav:", error);
-    // fallback nav in case of error
-    return "<ul><li><a href='/' title='Home page'>Home</a></li></ul>";
-  }
-};
+    const data = await invModel.getClassifications();
 
-/* ************************
- * Builds HTML for vehicle detail view
- ************************** */
-Util.buildVehicleDetailHTML = function (vehicle) {
+    let nav = `<ul>`;
+    nav += `<li><a href="/" title="Home page">Home</a></li>`;
+
+    data.forEach((row) => {
+      nav += `<li><a href="/inventory/type/${row.classification_id}" title="See our ${row.classification_name} vehicles">${row.classification_name}</a></li>`;
+    });
+
+    nav += `</ul>`;
+    return nav;
+  } catch (error) {
+    console.error("Error building nav:", error.message);
+    return `<ul><li><a href="/" title="Home page">Home</a></li></ul>`;
+  }
+}
+
+function buildVehicleDetailHTML(vehicle) {
   const priceFormatted = vehicle.inv_price.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -56,14 +41,16 @@ Util.buildVehicleDetailHTML = function (vehicle) {
       </div>
     </div>
   `;
+}
+
+function handleErrors(fn) {
+  return function (req, res, next) {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+}
+
+module.exports = {
+  getNav,
+  buildVehicleDetailHTML,
+  handleErrors,
 };
-
-/* ****************************************
- * Middleware For Handling Errors
- * Wrap other functions in this for 
- * General Error Handling
- **************************************** */
-Util.handleErrors = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
-
-module.exports = Util;

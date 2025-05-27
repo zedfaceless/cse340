@@ -1,64 +1,70 @@
-const baseController = require("./controllers/baseController");
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const path = require("path");
-const env = require("dotenv").config();
+const dotenv = require("dotenv").config();
 const utilities = require("./utilities/");
-const app = express();
+const baseController = require("./controllers/baseController");
+const inventoryRouter = require("./routes/inventory");
 const staticRoutes = require("./routes/static");
-const inventoryRouter = require('./routes/inventory');
 
+const app = express();
 
-// Make nav available to all views
+// Middleware to make nav available to all views
 app.use(async (req, res, next) => {
-  res.locals.nav = await utilities.getNav();
+  try {
+    res.locals.nav = await utilities.getNav();
+  } catch (error) {
+    console.error('Error getting navigation:', error.message);
+    res.locals.nav = '<ul><li><a href="/" title="Home page">Home</a></li></ul>'; // fallback nav
+  }
   next();
 });
 
-app.use(express.static('public'));
+// Middleware to serve static files
+app.use(express.static('public'))
 
-// Mount inventory routes at /inv (this fixes your navigation route issue)
-app.use('/inventory', inventoryRouter);
-
-// Set the view engine and views folder
+// Set the view engine and layout
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-
-// Use express-ejs-layouts
 app.use(expressLayouts);
 app.set("layout", "./layouts/layout");
 
-// Static file routes
-app.use(staticRoutes);
+// Mount routes
+app.use("/", staticRoutes);
+app.use("/inventory", inventoryRouter);
 
-// Index route
+// Home page route
 app.get("/", utilities.handleErrors(baseController.buildHome));
 
-// Local Server Information
-const port = process.env.PORT || 5500;
-const host = process.env.HOST || "localhost";
-
-// Start server
-app.listen(port, () => {
-  console.log(`App listening on http://${host}:${port}`);
-});
-
-// File Not Found Route - must be last route in list
-app.use(async (req, res, next) => {
+// 404 handler (must be last route)
+app.use((req, res, next) => {
   next({ status: 404, message: 'Sorry, we appear to have lost that page.' });
 });
 
-// Express Error Handler
+// Global error handler
 app.use(async (err, req, res, next) => {
-  let nav = await utilities.getNav();
+  let nav;
+  try {
+    nav = await utilities.getNav();
+  } catch (error) {
+    nav = '<ul><li><a href="/" title="Home page">Home</a></li></ul>';
+  }
+
   console.error(`Error at: "${req.originalUrl}": ${err.message}`);
-  const message =
-    err.status === 404
-      ? err.message
-      : 'Oh no! There was a crash. Maybe try a different route?';
+  const message = err.status === 404
+    ? err.message
+    : 'Oh no! There was a crash. Maybe try a different route?';
+
   res.status(err.status || 500).render("errors/error", {
-    title: err.status || 'Server Error',
+    title: err.status || "Server Error",
     message,
     nav,
   });
+});
+
+// Start server
+const port = process.env.PORT || 5500;
+const host = process.env.HOST || "localhost";
+app.listen(port, () => {
+  console.log(`App listening at http://${host}:${port}`);
 });

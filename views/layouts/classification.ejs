@@ -1,0 +1,28 @@
+<h1><%= title %></h1>
+
+<% if (inventory && inventory.length > 0) { %>
+  <div class="vehicle-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding-left: 0;">
+    <% inventory.forEach(vehicle => { 
+      const imageFilename = vehicle.inv_image ? vehicle.inv_image.split('\\').pop().split('/').pop() : null;
+      const imagePath = imageFilename ? `/images/vehicles/${imageFilename}` : '/images/vehicles/placeholder.jpg';
+      const detailUrl = `/inventory/detail/${vehicle.inv_id}`;  // Adjust route as per your app
+    %>
+      <div class="vehicle-card" style="border: 1px solid #ccc; padding: 15px; max-width: 280px; box-shadow: 0 0 5px #ddd; border-radius: 4px;">
+        <a href="<%= detailUrl %>" style="text-decoration: none; color: inherit;">
+          <h2><%= vehicle.inv_make %> <%= vehicle.inv_model %></h2>
+          <img 
+            src="<%= imagePath %>" 
+            alt="Image of <%= vehicle.inv_make %> <%= vehicle.inv_model %>" 
+            style="max-width: 250px; border: 1px solid #ccc; display: block; margin-bottom: 10px; width: 100%; height: auto;"
+            onerror="this.onerror=null;this.src='/images/vehicles/placeholder.jpg';"
+          >
+          <p>Year: <%= vehicle.inv_year %></p>
+          <p>Price: $<%= vehicle.inv_price.toLocaleString() %></p>
+          <p>Mileage: <%= vehicle.inv_miles.toLocaleString() %> miles</p>
+        </a>
+      </div>
+    <% }) %>
+  </div>
+<% } else { %>
+  <p>No vehicles found in this classification.</p>
+<% } %>
