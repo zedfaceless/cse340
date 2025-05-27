@@ -1,21 +1,18 @@
-// models/inventory-model.js
-const db = require("../database");
+const pool = require('../database/connection'); // Adjust path if needed
 
-async function getClassifications() {
-  const sql = `SELECT * FROM public.classification ORDER BY classification_name`;
-  const result = await db.query(sql);
-  return result.rows;
-}
-
-// New function to get a vehicle by its inventory id
 async function getVehicleById(inv_id) {
-  const sql = `SELECT * FROM public.inventory WHERE inv_id = $1`;
-  const values = [inv_id];
-  const result = await db.query(sql, values);
-  return result.rows[0]; // returns the single vehicle or undefined if not found
+  try {
+    const sql = 'SELECT * FROM inventory WHERE inv_id = $1';
+    const values = [inv_id];
+    const result = await pool.query(sql, values);
+
+    if (result.rows.length === 0) return null;
+    return result.rows[0];
+  } catch (error) {
+    throw error;
+  }
 }
 
-module.exports = { 
-  getClassifications,
+module.exports = {
   getVehicleById,
 };

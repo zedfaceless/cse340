@@ -6,7 +6,7 @@ const env = require("dotenv").config();
 const utilities = require("./utilities/");
 const app = express();
 const staticRoutes = require("./routes/static");
-const inventoryRouter = require("./routes/inventory");
+const invRouter = require("./routes/inventory"); // Renamed for clarity
 
 // Make nav available to all views
 app.use(async (req, res, next) => {
@@ -14,7 +14,8 @@ app.use(async (req, res, next) => {
   next();
 });
 
-app.use("/inventory", inventoryRouter);
+// Mount inventory routes at /inv (this fixes your navigation route issue)
+app.use("/inv", invRouter);
 
 // Set the view engine and views folder
 app.set("view engine", "ejs");
@@ -46,12 +47,15 @@ app.use(async (req, res, next) => {
 
 // Express Error Handler
 app.use(async (err, req, res, next) => {
-  let nav = await utilities.getNav()
-  console.error(`Error at: "${req.originalUrl}": ${err.message}`)
-  if(err.status == 404){ message = err.message} else {message = 'Oh no! There was a crash. Maybe try a different route?'}
-  res.render("errors/error", {
+  let nav = await utilities.getNav();
+  console.error(`Error at: "${req.originalUrl}": ${err.message}`);
+  const message =
+    err.status === 404
+      ? err.message
+      : 'Oh no! There was a crash. Maybe try a different route?';
+  res.status(err.status || 500).render("errors/error", {
     title: err.status || 'Server Error',
     message,
-    nav
-  })
+    nav,
+  });
 });

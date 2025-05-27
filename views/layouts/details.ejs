@@ -1,13 +1,48 @@
-<%- include('../partials/header') %>
-<%- include('../partials/nav') %>
-
-<main>
-  <h1><%= title %></h1>
-
-  <!-- Inject the formatted vehicle HTML -->
-  <div class="vehicle-detail-wrapper">
-    <%- detail %>
-  </div>
-</main>
-
-<%- include('../partials/footer') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/inventory.css" />
+  <style>
+    .vehicle-detail-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      max-width: 900px;
+      margin: 20px auto;
+      font-family: Arial, sans-serif;
+    }
+    .vehicle-image img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .vehicle-image {
+      flex: 1 1 400px;
+    }
+    .vehicle-info {
+      flex: 1 1 400px;
+    }
+    .vehicle-info h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+    .vehicle-info p {
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
+    @media (max-width: 768px) {
+      .vehicle-detail-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <%- vehicleHTML %>
+  </main>
+</body>
+</html>
