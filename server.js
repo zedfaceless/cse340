@@ -3,7 +3,7 @@ const expressLayouts = require("express-ejs-layouts");
 const path = require("path");
 const dotenv = require("dotenv").config();
 const utilities = require("./utilities/");
-const baseController = require("./controllers/baseController");
+const baseController = require('./controllers/basecontroller');
 const inventoryRouter = require("./routes/inventory");
 const staticRoutes = require("./routes/static");
 
