@@ -12,3 +12,4 @@ router.post("/register", accountController.registerAccount);
 router.post("/login", accountController.loginAccount); // ✅ Login handler added
 
 module.exports = router;
+
