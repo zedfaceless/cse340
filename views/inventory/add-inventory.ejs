@@ -14,9 +14,16 @@
 
 <h1>Add New Inventory Item</h1>
 
-<form action="/inv/add-inventory" method="POST" id="addInventoryForm">
+<form action="/inventory/add-inventory" method="POST" id="addInventoryForm">
   <label for="classification_id">Classification</label>
-  <%= classificationList %>
+  <select id="classification_id" name="classification_id" required>
+    <option value="">Choose a Classification</option>
+    <% classificationList.forEach(c => { %>
+      <option value="<%= c.classification_id %>" <%= classification_id == c.classification_id ? "selected" : "" %>>
+        <%= c.classification_name %>
+      </option>
+    <% }) %>
+  </select>
 
   <label for="inv_make">Make</label>
   <input
