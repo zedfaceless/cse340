@@ -11,6 +11,9 @@ async function getNav() {
       nav += `<li><a href="/inventory/type/${row.classification_id}" title="See our ${row.classification_name} vehicles">${row.classification_name}</a></li>`;
     });
 
+    // Add the Add Classification tab here
+    nav += `<li><a href="/inventory/add-classification" title="Add Classification">Add Classification</a></li>`;
+
     nav += `</ul>`;
     return nav;
   } catch (error) {

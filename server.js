@@ -10,7 +10,7 @@ const accountRoute = require("./routes/accountRoutes");
 
 const app = express();
 
-// ✅ Middleware to parse form data
+// Middleware to parse form data
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 

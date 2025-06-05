@@ -43,8 +43,21 @@ async function getVehiclesByClassification(classification_id) {
   }
 }
 
+// Add a new classification
+async function addClassification(classification_name) {
+  try {
+    const sql = 'INSERT INTO classification (classification_name) VALUES ($1)';
+    const values = [classification_name];
+    const result = await pool.query(sql, values);
+    return result.rowCount > 0;
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   getVehicleById,
   getClassifications,
-  getVehiclesByClassification, // <-- added here
+  getVehiclesByClassification,
+  addClassification,  // <-- added here
 };
