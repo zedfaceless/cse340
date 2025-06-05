@@ -5,7 +5,7 @@
 <% if (errors && errors.length > 0) { %>
   <div class="errors">
     <ul>
-      <% errors.array().forEach(error => { %>
+      <% errors.forEach(error => { %>
         <li><%= error.msg %></li>
       <% }) %>
     </ul>
@@ -20,9 +20,10 @@
     type="text" 
     id="classification_name" 
     name="classification_name" 
-    pattern="^[A-Za-z]+$" 
+    pattern="^[A-Za-z0-9\s]+$" 
+    minlength="3"
     required 
-    title="Only letters are allowed, no spaces or special characters"
+    title="Only letters, numbers, and spaces are allowed. Minimum 3 characters."
     value="<%= classification_name ? classification_name : '' %>"
   >
   <button type="submit">Add Classification</button>

@@ -111,6 +111,102 @@ async function addClassification(req, res, next) {
   }
 }
 
+/* ===== NEW CONTROLLERS FOR ADD INVENTORY ===== */
+
+// Render Add Inventory Form
+async function showAddInventoryForm(req, res, next) {
+  try {
+    const classificationList = await inventoryModel.getClassifications();
+
+    // Build classification dropdown options HTML
+    let classificationOptions = '<select id="classification_id" name="classification_id" required>';
+    classificationOptions += '<option value="">Choose a Classification</option>';
+    classificationList.forEach(classification => {
+      classificationOptions += `<option value="${classification.classification_id}">${classification.classification_name}</option>`;
+    });
+    classificationOptions += '</select>';
+
+    res.render('inventory/add-inventory', {
+      title: 'Add Inventory Item',
+      nav: res.locals.nav,
+      errors: null,
+      classificationList: classificationOptions,
+      inv_make: '',
+      inv_model: '',
+      inv_year: '',
+      inv_description: '',
+      inv_price: '',
+      inv_miles: '',
+      inv_color: '',
+      inv_image: '/images/no-image-available.png',
+      inv_thumbnail: '/images/no-image-available.png',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Handle POST Add Inventory Item
+async function addInventoryItem(req, res, next) {
+  try {
+    const {
+      classification_id,
+      inv_make,
+      inv_model,
+      inv_year,
+      inv_description,
+      inv_price,
+      inv_miles,
+      inv_color,
+      inv_image,
+      inv_thumbnail,
+    } = req.body;
+
+    // Call the model to insert the inventory item
+    const result = await inventoryModel.addInventoryItem({
+      classification_id,
+      inv_make,
+      inv_model,
+      inv_year,
+      inv_description,
+      inv_price,
+      inv_miles,
+      inv_color,
+      inv_image,
+      inv_thumbnail,
+    });
+
+    if (result) {
+      req.flash('message', `Inventory item "${inv_make} ${inv_model}" added successfully.`);
+      return res.redirect('/inv');
+    } else {
+      throw new Error('Failed to add inventory item');
+    }
+  } catch (error) {
+    // On error, re-render form with sticky data and error messages
+    try {
+      const classificationList = await inventoryModel.getClassifications();
+      let classificationOptions = '<select id="classification_id" name="classification_id" required>';
+      classificationOptions += '<option value="">Choose a Classification</option>';
+      classificationList.forEach(classification => {
+        const selected = classification.classification_id.toString() === req.body.classification_id ? 'selected' : '';
+        classificationOptions += `<option value="${classification.classification_id}" ${selected}>${classification.classification_name}</option>`;
+      });
+      classificationOptions += '</select>';
+
+      res.render('inventory/add-inventory', {
+        title: 'Add Inventory Item',
+        nav: res.locals.nav,
+        errors: [ { msg: error.message } ],
+        classificationList: classificationOptions,
+        ...req.body,
+      });
+    } catch (renderError) {
+      next(renderError);
+    }
+  }
+}
+
 module.exports = {
   buildInventory,
   buildVehicleDetailView,
@@ -118,4 +214,6 @@ module.exports = {
   showManagementView,
   showAddClassificationForm,
   addClassification,
+  showAddInventoryForm,  // <-- NEW
+  addInventoryItem       // <-- NEW
 };

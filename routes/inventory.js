@@ -34,6 +34,17 @@ router.post(
   inventoryController.addClassification
 );
 
+// Route to show add-inventory form
+router.get('/add-inventory', inventoryController.showAddInventoryForm);
+
+// Route to process add-inventory form
+router.post(
+  '/add-inventory',
+  invVal.inventoryRules(),       // <-- make sure this exists in your validation file
+  invVal.checkInventoryData,     // <-- make sure this exists in your validation file
+  inventoryController.addInventoryItem
+);
+
 // Route to show inventory management view (keep this last to avoid conflicts)
 router.get("/", inventoryController.showManagementView);
 
