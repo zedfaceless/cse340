@@ -1,10 +1,21 @@
 const path = require('path');
+const { validationResult } = require('express-validator');
 const inventoryModel = require('../models/inventory-model');
 
-// Controller to render list of vehicle classifications at /inv
+// Render inventory management page
+async function showManagementView(req, res) {
+  res.render("inventory/management", {
+    title: "Inventory Management",
+    nav: res.locals.nav,
+    errors: null,
+    message: req.flash("message"),
+  });
+}
+
+// Render vehicle classification list
 async function buildInventory(req, res, next) {
   try {
-    const classificationList = await inventoryModel.getClassifications(); // get all classifications
+    const classificationList = await inventoryModel.getClassifications();
     res.render("inventory/classification", {
       title: "Vehicle Classifications",
       nav: res.locals.nav,
@@ -16,7 +27,27 @@ async function buildInventory(req, res, next) {
   }
 }
 
-// Controller for Vehicle Detail Page
+// Render vehicle list by classification
+async function buildByClassification(req, res, next) {
+  try {
+    const classificationId = req.params.classification_id;
+    const inventoryData = await inventoryModel.getVehiclesByClassification(classificationId);
+
+    const classificationName = inventoryData.length > 0
+      ? inventoryData[0].classification_name
+      : 'Unknown';
+
+    res.render('layouts/classification', {
+      title: `Vehicles in ${classificationName}`,
+      inventory: inventoryData,
+      nav: res.locals.nav,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Render vehicle detail view
 async function buildVehicleDetailView(req, res, next) {
   try {
     const inv_id = req.params.inv_id;
@@ -43,91 +74,65 @@ async function buildVehicleDetailView(req, res, next) {
   }
 }
 
-// Controller for Vehicle List by Classification
-async function buildByClassification(req, res, next) {
-  try {
-    const classificationId = req.params.classification_id;
-    const inventoryData = await inventoryModel.getVehiclesByClassification(classificationId);
-
-    const classificationName = inventoryData.length > 0
-      ? inventoryData[0].classification_name
-      : 'Unknown';
-
-    res.render('layouts/classification', {
-      title: `Vehicles in ${classificationName}`,
-      inventory: inventoryData,
-      nav: res.locals.nav,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-// Controller for Inventory Management Page
-async function showManagementView(req, res) {
-  res.render("inventory/management", {
-    title: "Inventory Management",
-    nav: res.locals.nav,
-    errors: null,
-    message: req.flash("message")
-  });
-}
-
-// Controller to render the Add Classification form
+// Render add classification form
 async function showAddClassificationForm(req, res) {
-  let nav = res.locals.nav;
   res.render("inventory/add-classification", {
     title: "Add Classification",
-    nav,
+    nav: res.locals.nav,
     errors: null,
     classification_name: "",
+    message: null,
   });
 }
 
-// Controller to handle POST add-classification
-async function addClassification(req, res, next) {
+// Handle add classification POST
+async function addClassification(req, res) {
+  const { classification_name } = req.body;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).render("inventory/add-classification", {
+      title: "Add Classification",
+      nav: res.locals.nav,
+      errors: errors.array(),
+      classification_name,
+      message: null,
+    });
+  }
+
   try {
-    const classification_name = req.body.classification_name;
-
-    if (!classification_name || classification_name.trim().length === 0) {
-      return res.status(400).render('inventory/add-classification', {
-        title: 'Add Classification',
-        nav: res.locals.nav,
-        errors: ['Classification name is required.'],
-        classification_name: classification_name,
-      });
-    }
-
     const result = await inventoryModel.addClassification(classification_name);
-
     if (result) {
-      req.flash('message', `Classification "${classification_name}" added successfully.`);
-      return res.redirect('/inv');
+      req.flash("message", `Classification "${classification_name}" added successfully.`);
+      return res.redirect("/inv");
     } else {
-      throw new Error('Failed to add classification');
+      throw new Error("Failed to add classification.");
     }
   } catch (error) {
-    next(error);
+    return res.status(500).render("inventory/add-classification", {
+      title: "Add Classification",
+      nav: res.locals.nav,
+      errors: [{ msg: error.message }],
+      classification_name,
+      message: null,
+    });
   }
 }
 
-/* ===== NEW CONTROLLERS FOR ADD INVENTORY ===== */
-
-// Render Add Inventory Form
+// Render add inventory form
 async function showAddInventoryForm(req, res, next) {
   try {
     const classificationList = await inventoryModel.getClassifications();
 
-    // Build classification dropdown options HTML
     let classificationOptions = '<select id="classification_id" name="classification_id" required>';
     classificationOptions += '<option value="">Choose a Classification</option>';
-    classificationList.forEach(classification => {
-      classificationOptions += `<option value="${classification.classification_id}">${classification.classification_name}</option>`;
+    classificationList.forEach(c => {
+      classificationOptions += `<option value="${c.classification_id}">${c.classification_name}</option>`;
     });
     classificationOptions += '</select>';
 
-    res.render('inventory/add-inventory', {
-      title: 'Add Inventory Item',
+    res.render("inventory/add-inventory", {
+      title: "Add Inventory Item",
       nav: res.locals.nav,
       errors: null,
       classificationList: classificationOptions,
@@ -138,82 +143,109 @@ async function showAddInventoryForm(req, res, next) {
       inv_price: '',
       inv_miles: '',
       inv_color: '',
-      inv_image: '/images/no-image-available.png',
-      inv_thumbnail: '/images/no-image-available.png',
+      inv_image: '',
+      inv_thumbnail: '',
+      message: null,
     });
   } catch (error) {
     next(error);
   }
 }
 
-// Handle POST Add Inventory Item
-async function addInventoryItem(req, res, next) {
-  try {
-    const {
-      classification_id,
-      inv_make,
-      inv_model,
-      inv_year,
-      inv_description,
-      inv_price,
-      inv_miles,
-      inv_color,
-      inv_image,
-      inv_thumbnail,
-    } = req.body;
+// Handle add inventory item POST
+async function addInventoryItem(req, res) {
+  const errors = validationResult(req);
+  const {
+    classification_id,
+    inv_make,
+    inv_model,
+    inv_year,
+    inv_description,
+    inv_price,
+    inv_miles,
+    inv_color,
+    inv_image,
+    inv_thumbnail,
+  } = req.body;
 
-    // Call the model to insert the inventory item
-    const result = await inventoryModel.addInventoryItem({
-      classification_id,
-      inv_make,
-      inv_model,
-      inv_year,
-      inv_description,
-      inv_price,
-      inv_miles,
-      inv_color,
-      inv_image,
-      inv_thumbnail,
+  if (!errors.isEmpty()) {
+    // Re-render form with errors and sticky form data
+    const classificationList = await inventoryModel.getClassifications();
+
+    let classificationOptions = '<select id="classification_id" name="classification_id" required>';
+    classificationOptions += '<option value="">Choose a Classification</option>';
+    classificationList.forEach(c => {
+      const selected = c.classification_id.toString() === classification_id ? 'selected' : '';
+      classificationOptions += `<option value="${c.classification_id}" ${selected}>${c.classification_name}</option>`;
     });
+    classificationOptions += '</select>';
 
+    return res.status(400).render("inventory/add-inventory", {
+      title: "Add Inventory Item",
+      nav: res.locals.nav,
+      errors: errors.array(),
+      classificationList: classificationOptions,
+      classification_id,
+      inv_make,
+      inv_model,
+      inv_year,
+      inv_description,
+      inv_price,
+      inv_miles,
+      inv_color,
+      inv_image,
+      inv_thumbnail,
+      message: null,
+    });
+  }
+
+  try {
+    const result = await inventoryModel.addInventoryItem(
+      classification_id,
+      inv_make,
+      inv_model,
+      inv_year,
+      inv_description,
+      inv_price,
+      inv_miles,
+      inv_color,
+      inv_image,
+      inv_thumbnail
+    );
     if (result) {
-      req.flash('message', `Inventory item "${inv_make} ${inv_model}" added successfully.`);
-      return res.redirect('/inv');
+      req.flash("message", `Inventory item "${inv_make} ${inv_model}" added successfully.`);
+      return res.redirect("/inv");
     } else {
-      throw new Error('Failed to add inventory item');
+      throw new Error("Failed to add inventory item.");
     }
   } catch (error) {
-    // On error, re-render form with sticky data and error messages
-    try {
-      const classificationList = await inventoryModel.getClassifications();
-      let classificationOptions = '<select id="classification_id" name="classification_id" required>';
-      classificationOptions += '<option value="">Choose a Classification</option>';
-      classificationList.forEach(classification => {
-        const selected = classification.classification_id.toString() === req.body.classification_id ? 'selected' : '';
-        classificationOptions += `<option value="${classification.classification_id}" ${selected}>${classification.classification_name}</option>`;
-      });
-      classificationOptions += '</select>';
-
-      res.render('inventory/add-inventory', {
-        title: 'Add Inventory Item',
-        nav: res.locals.nav,
-        errors: [ { msg: error.message } ],
-        classificationList: classificationOptions,
-        ...req.body,
-      });
-    } catch (renderError) {
-      next(renderError);
-    }
+    res.status(500).render("inventory/add-inventory", {
+      title: "Add Inventory Item",
+      nav: res.locals.nav,
+      errors: [{ msg: error.message }],
+      classificationList: await inventoryModel.getClassifications(),
+      classification_id,
+      inv_make,
+      inv_model,
+      inv_year,
+      inv_description,
+      inv_price,
+      inv_miles,
+      inv_color,
+      inv_image,
+      inv_thumbnail,
+      message: null,
+    });
   }
 }
 
 module.exports = {
-  buildInventory,
-  buildVehicleDetailView,
-  buildByClassification,
   showManagementView,
+  buildInventory,
+  buildByClassification,
+  buildVehicleDetailView,
   showAddClassificationForm,
   addClassification,
-  showAddInventoryForm,  // <-- NEW
-  addInventoryItem       // <-- NEW
+  showAddInventoryForm,
+  addInventoryItem,
 };

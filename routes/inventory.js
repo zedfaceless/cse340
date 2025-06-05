@@ -3,14 +3,14 @@ const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
 const invVal = require('../utilities/inventory-validation'); // Validation middleware
 
-// Route to display all vehicle classifications (Step 3)
+// Route to display all vehicle classifications
 router.get('/classifications', async (req, res, next) => {
   try {
     const classificationList = await require('../models/inventory-model').getClassifications();
     res.render('inventory/classification', {
       title: 'Vehicle Classifications',
       nav: res.locals.nav,
-      classificationList
+      classificationList,
     });
   } catch (err) {
     next(err);
@@ -20,13 +20,13 @@ router.get('/classifications', async (req, res, next) => {
 // Route to show vehicles by classification/type
 router.get('/type/:classification_id', inventoryController.buildByClassification);
 
-// Route to show vehicle detail
+// Route to show vehicle detail view
 router.get('/detail/:inv_id', inventoryController.buildVehicleDetailView);
 
-// Route to show add-classification form
+// Route to show add classification form
 router.get('/add-classification', inventoryController.showAddClassificationForm);
 
-// Route to process add-classification form
+// Route to process add classification form submission with validation
 router.post(
   '/add-classification',
   invVal.classificationRules(),
@@ -34,18 +34,18 @@ router.post(
   inventoryController.addClassification
 );
 
-// Route to show add-inventory form
+// Route to show add inventory form
 router.get('/add-inventory', inventoryController.showAddInventoryForm);
 
-// Route to process add-inventory form
+// Route to process add inventory form submission with validation
 router.post(
   '/add-inventory',
-  invVal.inventoryRules(),       // <-- make sure this exists in your validation file
-  invVal.checkInventoryData,     // <-- make sure this exists in your validation file
+  invVal.inventoryRules(),
+  invVal.checkInventoryData,
   inventoryController.addInventoryItem
 );
 
-// Route to show inventory management view (keep this last to avoid conflicts)
-router.get("/", inventoryController.showManagementView);
+// Route to show inventory management view (should be last to avoid route conflicts)
+router.get('/', inventoryController.showManagementView);
 
 module.exports = router;

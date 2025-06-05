@@ -16,6 +16,23 @@ validate.classificationRules = () => {
   ];
 };
 
+/* Classification Data Check Middleware */
+validate.checkClassificationData = async (req, res, next) => {
+  const { classification_name } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    let nav = await utilities.getNav();
+    return res.status(400).render("inventory/add-classification", {
+      title: "Add Classification",
+      nav,
+      errors: errors.array(),
+      classification_name,
+      message: null,
+    });
+  }
+  next();
+};
+
 /* Inventory Item Data Validation Rules */
 validate.inventoryRules = () => {
   return [
@@ -81,7 +98,7 @@ validate.inventoryRules = () => {
       .optional({ checkFalsy: true })
       .trim(),
   ];
-}
+};
 
 /* Check inventory data and return errors or continue */
 validate.checkInventoryData = async (req, res, next) => {
@@ -133,6 +150,6 @@ validate.checkInventoryData = async (req, res, next) => {
     return;
   }
   next();
-}
+};
 
 module.exports = validate;

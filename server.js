@@ -8,6 +8,9 @@ const inventoryRouter = require("./routes/inventory");
 const staticRoutes = require("./routes/static");
 const accountRoute = require("./routes/accountRoutes");
 
+const session = require("express-session");
+const flash = require("connect-flash");
+
 const app = express();
 
 // Middleware to parse form data
@@ -27,6 +30,24 @@ app.use(async (req, res, next) => {
 
 // Middleware to serve static files
 app.use(express.static("public"));
+
+// Setup session and flash middleware (order matters)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "defaultSecretKey123!", // fallback secret if .env missing
+    resave: false,
+    saveUninitialized: true,
+    cookie: { maxAge: 1000 * 60 * 60 * 24 }, // optional: 1 day session expiration
+  })
+);
+
+app.use(flash());
+
+// Make flash messages available globally in views
+app.use((req, res, next) => {
+  res.locals.message = req.flash("message");
+  next();
+});
 
 // Set the view engine and layout
 app.set("view engine", "ejs");

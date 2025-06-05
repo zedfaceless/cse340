@@ -1,30 +1,37 @@
-<% if (message) { %>
-  <div class="notice"><%= message %></div>
-<% } %>
+<%- include('../partials/header') %>
+<%- include('../partials/navigation') %>
 
-<% if (errors && errors.length > 0) { %>
-  <div class="errors">
-    <ul>
-      <% errors.forEach(error => { %>
-        <li><%= error.msg %></li>
-      <% }) %>
-    </ul>
-  </div>
-<% } %>
+<main>
+  <% if (message) { %>
+    <div class="notice"><%= message %></div>
+  <% } %>
 
-<h1>Add New Classification</h1>
+  <% if (errors && errors.length > 0) { %>
+    <div class="errors">
+      <ul>
+        <% errors.forEach(error => { %>
+          <li><%= error.msg %></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
 
-<form action="/inv/add-classification" method="POST">
-  <label for="classification_name">Classification Name</label>
-  <input 
-    type="text" 
-    id="classification_name" 
-    name="classification_name" 
-    pattern="^[A-Za-z0-9\s]+$" 
-    minlength="3"
-    required 
-    title="Only letters, numbers, and spaces are allowed. Minimum 3 characters."
-    value="<%= classification_name ? classification_name : '' %>"
-  >
-  <button type="submit">Add Classification</button>
-</form>
+  <h1>Add New Classification</h1>
+
+  <form action="/inv/add-classification" method="POST">
+    <label for="classification_name">Classification Name</label>
+    <input 
+      type="text" 
+      id="classification_name" 
+      name="classification_name" 
+      required 
+      minlength="3"
+      pattern="^[A-Za-z0-9]+$"
+      title="Only letters and numbers are allowed, no spaces or special characters. Minimum 3 characters."
+      value="<%= classification_name ? classification_name : '' %>"
+    >
+    <button type="submit">Add Classification</button>
+  </form>
+</main>
+
+<%- include('../partials/footer') %>
