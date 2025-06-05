@@ -2,6 +2,20 @@ const utilities = require("../utilities");
 const { body, validationResult } = require("express-validator");
 const validate = {};
 
+/* Classification Data Validation Rules */
+validate.classificationRules = () => {
+  return [
+    body("classification_name")
+      .trim()
+      .notEmpty()
+      .withMessage("Please provide a classification name.")
+      .isLength({ min: 3 })
+      .withMessage("Classification name must be at least 3 characters long.")
+      .matches(/^[A-Za-z0-9]+$/)
+      .withMessage("Classification name must contain only letters and numbers, without spaces or special characters."),
+  ];
+};
+
 /* Inventory Item Data Validation Rules */
 validate.inventoryRules = () => {
   return [
