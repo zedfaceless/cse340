@@ -1,12 +1,27 @@
 const path = require('path');
 const inventoryModel = require('../models/inventory-model');
 
+// Controller to render list of vehicle classifications at /inv
+async function buildInventory(req, res, next) {
+  try {
+    const classificationList = await inventoryModel.getClassifications(); // get all classifications
+    res.render("inventory/classification", {
+      title: "Vehicle Classifications",
+      nav: res.locals.nav,
+      classificationList,
+      errors: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // Controller for Vehicle Detail Page
 async function buildVehicleDetailView(req, res, next) {
   try {
     const inv_id = req.params.inv_id;
     const vehicleData = await inventoryModel.getVehicleById(inv_id);
-    
+
     if (!vehicleData) {
       return res.status(404).send('Vehicle not found');
     }
@@ -34,8 +49,8 @@ async function buildByClassification(req, res, next) {
     const classificationId = req.params.classification_id;
     const inventoryData = await inventoryModel.getVehiclesByClassification(classificationId);
 
-    const classificationName = inventoryData.length > 0 
-      ? inventoryData[0].classification_name 
+    const classificationName = inventoryData.length > 0
+      ? inventoryData[0].classification_name
       : 'Unknown';
 
     res.render('layouts/classification', {
@@ -74,7 +89,6 @@ async function addClassification(req, res, next) {
   try {
     const classification_name = req.body.classification_name;
 
-    // Basic server-side validation
     if (!classification_name || classification_name.trim().length === 0) {
       return res.status(400).render('inventory/add-classification', {
         title: 'Add Classification',
@@ -84,12 +98,11 @@ async function addClassification(req, res, next) {
       });
     }
 
-    // Insert classification into DB via model
     const result = await inventoryModel.addClassification(classification_name);
 
     if (result) {
       req.flash('message', `Classification "${classification_name}" added successfully.`);
-      return res.redirect('/inv'); // redirect to inventory management page
+      return res.redirect('/inv');
     } else {
       throw new Error('Failed to add classification');
     }
@@ -99,6 +112,7 @@ async function addClassification(req, res, next) {
 }
 
 module.exports = {
+  buildInventory,
   buildVehicleDetailView,
   buildByClassification,
   showManagementView,

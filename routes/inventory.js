@@ -3,6 +3,20 @@ const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
 const invVal = require('../utilities/inventory-validation'); // Validation middleware
 
+// Route to display all vehicle classifications (Step 3)
+router.get('/classifications', async (req, res, next) => {
+  try {
+    const classificationList = await require('../models/inventory-model').getClassifications();
+    res.render('inventory/classification', {
+      title: 'Vehicle Classifications',
+      nav: res.locals.nav,
+      classificationList
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Route to show vehicles by classification/type
 router.get('/type/:classification_id', inventoryController.buildByClassification);
 

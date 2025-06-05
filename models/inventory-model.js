@@ -59,5 +59,5 @@ module.exports = {
   getVehicleById,
   getClassifications,
   getVehiclesByClassification,
-  addClassification,  // <-- added here
+  addClassification,
 };
