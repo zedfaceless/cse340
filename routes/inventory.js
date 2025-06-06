@@ -3,30 +3,19 @@ const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
 const invVal = require('../utilities/inventory-validation'); // Validation middleware
 
-// Route to display all vehicle classifications
-router.get('/classifications', async (req, res, next) => {
-  try {
-    const classificationList = await require('../models/inventory-model').getClassifications();
-    res.render('inventory/classification', {
-      title: 'Vehicle Classifications',
-      nav: res.locals.nav,
-      classificationList,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+// Display vehicle classifications
+router.get('/classifications', inventoryController.buildInventory);
 
-// Route to show vehicles by classification/type
+// Display vehicles by classification ID
 router.get('/type/:classification_id', inventoryController.buildByClassification);
 
-// Route to show vehicle detail view
+// Display vehicle detail view
 router.get('/detail/:inv_id', inventoryController.buildVehicleDetailView);
 
-// Route to show add classification form
+// Show add classification form
 router.get('/add-classification', inventoryController.showAddClassificationForm);
 
-// Route to process add classification form submission with validation
+// Handle add classification POST with validation
 router.post(
   '/add-classification',
   invVal.classificationRules(),
@@ -34,10 +23,10 @@ router.post(
   inventoryController.addClassification
 );
 
-// Route to show add inventory form
+// Show add inventory form
 router.get('/add-inventory', inventoryController.showAddInventoryForm);
 
-// Route to process add inventory form submission with validation
+// Handle add inventory item POST with validation
 router.post(
   '/add-inventory',
   invVal.inventoryRules(),
@@ -45,7 +34,7 @@ router.post(
   inventoryController.addInventoryItem
 );
 
-// Route to show inventory management view (should be last to avoid route conflicts)
+// Default management view (keep this last)
 router.get('/', inventoryController.showManagementView);
 
 module.exports = router;
