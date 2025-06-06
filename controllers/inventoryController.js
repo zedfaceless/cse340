@@ -1,6 +1,7 @@
 const path = require('path');
 const { validationResult } = require('express-validator');
 const inventoryModel = require('../models/inventory-model');
+const utilities = require('../utilities');
 
 // Render inventory management page
 async function showManagementView(req, res) {
@@ -12,7 +13,7 @@ async function showManagementView(req, res) {
   });
 }
 
-// Render vehicle classification list
+// Render classification listing (just list of classification names)
 async function buildInventory(req, res, next) {
   try {
     const classificationList = await inventoryModel.getClassifications();
@@ -27,27 +28,30 @@ async function buildInventory(req, res, next) {
   }
 }
 
-// Render vehicle list by classification
-async function buildByClassification(req, res, next) {
+// ✅ Render vehicles under a classification ID (uses grid)
+async function buildByClassificationId(req, res, next) {
   try {
     const classificationId = req.params.classification_id;
     const inventoryData = await inventoryModel.getVehiclesByClassification(classificationId);
 
-    const classificationName = inventoryData.length > 0
-      ? inventoryData[0].classification_name
-      : 'Unknown';
+    if (!inventoryData || inventoryData.length === 0) {
+      throw new Error("No vehicles found for this classification.");
+    }
 
-    res.render('layouts/classification', {
-      title: `Vehicles in ${classificationName}`,
-      inventory: inventoryData,
+    const classificationName = inventoryData[0].classification_name;
+    const grid = await utilities.buildClassificationGrid(inventoryData);
+
+    res.render('inventory/classification-grid', {
+      title: `${classificationName} Vehicles`,
       nav: res.locals.nav,
+      grid,
     });
   } catch (error) {
     next(error);
   }
 }
 
-// Render vehicle detail view
+// Render vehicle details
 async function buildVehicleDetailView(req, res, next) {
   try {
     const inv_id = req.params.inv_id;
@@ -64,7 +68,7 @@ async function buildVehicleDetailView(req, res, next) {
       vehicleData.inv_image = '/images/vehicles/no-image-available.jpg';
     }
 
-    res.render('layouts/details', {
+    res.render('inventory/details', {
       title: `${vehicleData.inv_make} ${vehicleData.inv_model}`,
       vehicle: vehicleData,
       nav: res.locals.nav,
@@ -74,7 +78,7 @@ async function buildVehicleDetailView(req, res, next) {
   }
 }
 
-// Render add classification form
+// Show form to add a classification
 async function showAddClassificationForm(req, res) {
   res.render("inventory/add-classification", {
     title: "Add Classification",
@@ -85,7 +89,7 @@ async function showAddClassificationForm(req, res) {
   });
 }
 
-// Handle add classification POST
+// Handle POST add classification
 async function addClassification(req, res) {
   const { classification_name } = req.body;
   const errors = validationResult(req);
@@ -119,23 +123,17 @@ async function addClassification(req, res) {
   }
 }
 
-// Render add inventory form
+// Show form to add inventory item
 async function showAddInventoryForm(req, res, next) {
   try {
     const classificationList = await inventoryModel.getClassifications();
-
-    let classificationOptions = '<select id="classification_id" name="classification_id" required>';
-    classificationOptions += '<option value="">Choose a Classification</option>';
-    classificationList.forEach(c => {
-      classificationOptions += `<option value="${c.classification_id}">${c.classification_name}</option>`;
-    });
-    classificationOptions += '</select>';
 
     res.render("inventory/add-inventory", {
       title: "Add Inventory Item",
       nav: res.locals.nav,
       errors: null,
-      classificationList: classificationOptions,
+      classificationList,
+      classification_id: "",
       inv_make: '',
       inv_model: '',
       inv_year: '',
@@ -152,7 +150,7 @@ async function showAddInventoryForm(req, res, next) {
   }
 }
 
-// Handle add inventory item POST
+// Handle POST add inventory item
 async function addInventoryItem(req, res) {
   const errors = validationResult(req);
   const {
@@ -170,20 +168,11 @@ async function addInventoryItem(req, res) {
 
   if (!errors.isEmpty()) {
     const classificationList = await inventoryModel.getClassifications();
-
-    let classificationOptions = '<select id="classification_id" name="classification_id" required>';
-    classificationOptions += '<option value="">Choose a Classification</option>';
-    classificationList.forEach(c => {
-      const selected = c.classification_id.toString() === classification_id ? 'selected' : '';
-      classificationOptions += `<option value="${c.classification_id}" ${selected}>${c.classification_name}</option>`;
-    });
-    classificationOptions += '</select>';
-
     return res.status(400).render("inventory/add-inventory", {
       title: "Add Inventory Item",
       nav: res.locals.nav,
       errors: errors.array(),
-      classificationList: classificationOptions,
+      classificationList,
       classification_id,
       inv_make,
       inv_model,
@@ -211,6 +200,7 @@ async function addInventoryItem(req, res) {
       inv_image,
       inv_thumbnail
     );
+
     if (result) {
       req.flash("message", `Inventory item "${inv_make} ${inv_model}" added successfully.`);
       return res.redirect("/inventory");
@@ -218,11 +208,12 @@ async function addInventoryItem(req, res) {
       throw new Error("Failed to add inventory item.");
     }
   } catch (error) {
+    const classificationList = await inventoryModel.getClassifications();
     res.status(500).render("inventory/add-inventory", {
       title: "Add Inventory Item",
       nav: res.locals.nav,
       errors: [{ msg: error.message }],
-      classificationList: await inventoryModel.getClassifications(),
+      classificationList,
       classification_id,
       inv_make,
       inv_model,
@@ -240,8 +231,8 @@ async function addInventoryItem(req, res) {
 
 module.exports = {
   showManagementView,
-  buildInventory, // ✅ Make sure this is exported
-  buildByClassification,
+  buildInventory,
+  buildByClassificationId,
   buildVehicleDetailView,
   showAddClassificationForm,
   addClassification,

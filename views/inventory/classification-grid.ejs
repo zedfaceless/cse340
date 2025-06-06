@@ -1,0 +1,13 @@
+<%- include('../partials/header') %>
+
+<main>
+  <h1><%= title %></h1>
+
+  <% if (grid) { %>
+    <%- grid %>
+  <% } else { %>
+    <p>No vehicles found in this classification.</p>
+  <% } %>
+</main>
+
+<%- include('../partials/footer') %>

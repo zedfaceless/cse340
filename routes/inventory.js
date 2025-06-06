@@ -7,7 +7,7 @@ const invVal = require('../utilities/inventory-validation'); // Validation middl
 router.get('/classifications', inventoryController.buildInventory);
 
 // Route to show vehicles by classification/type
-router.get('/type/:classification_id', inventoryController.buildByClassification);
+router.get('/type/:classification_id', inventoryController.buildByClassificationId); // ✅ updated
 
 // Route to show vehicle detail view
 router.get('/detail/:inv_id', inventoryController.buildVehicleDetailView);
@@ -34,7 +34,7 @@ router.post(
   inventoryController.addInventoryItem
 );
 
-// Route to show inventory management view (should be last to avoid route conflicts)
+// Route to show inventory management view
 router.get('/', inventoryController.showManagementView);
 
 module.exports = router;
