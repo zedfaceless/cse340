@@ -1,4 +1,6 @@
 const invModel = require("../models/inventory-model");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 // Escape HTML for safety
 function escapeHtml(text) {
@@ -93,9 +95,34 @@ function handleErrors(fn) {
   };
 }
 
+/* ****************************************
+ * Middleware to check JWT token validity
+ **************************************** */
+function checkJWTToken(req, res, next) {
+  if (req.cookies && req.cookies.jwt) {
+    jwt.verify(
+      req.cookies.jwt,
+      process.env.ACCESS_TOKEN_SECRET,
+      function (err, accountData) {
+        if (err) {
+          req.flash("message", "Please log in");
+          res.clearCookie("jwt");
+          return res.redirect("/account/login");
+        }
+        res.locals.accountData = accountData;
+        res.locals.loggedin = 1;
+        next();
+      }
+    );
+  } else {
+    next();
+  }
+}
+
 module.exports = {
   getNav,
   buildClassificationGrid,
   buildVehicleDetailHTML,
   handleErrors,
+  checkJWTToken, // export the middleware here
 };

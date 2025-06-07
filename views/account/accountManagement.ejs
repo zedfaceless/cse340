@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Account Management</title>
+  <link rel="stylesheet" href="/css/styles.css" media="screen" />
+</head>
+<body>
+  <header>
+    <nav>
+      <%- nav %>
+    </nav>
+  </header>
+
+  <main>
+    <% if (message) { %>
+      <div class="flash-message"><%= message %></div>
+    <% } %>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="form-errors">
+        <ul>
+          <% errors.forEach(function(error) { %>
+            <li><%= error.msg %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <h1>You're logged in</h1>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Your Company Name</p>
+  </footer>
+</body>
+</html>

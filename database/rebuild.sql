@@ -5,9 +5,21 @@ DROP TYPE IF EXISTS public.account_type;
 
 -- Create Type or account_type
 CREATE TYPE public.account_type AS ENUM(
-	'Client'
-	'Employee'
+	'Client',
+	'Employee',
 	'Admin'); 
+
+  -- Create accounts table
+CREATE TABLE IF NOT EXISTS public.accounts (
+  account_id SERIAL PRIMARY KEY,
+  account_firstname VARCHAR(255) NOT NULL,
+  account_lastname VARCHAR(255) NOT NULL,
+  account_email VARCHAR(255) UNIQUE NOT NULL,
+  account_password VARCHAR(255) NOT NULL,
+  account_type public.account_type NOT NULL DEFAULT 'Client',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
 -- Create classification table 
 CREATE TABLE IF NOT EXISTS public.classification (

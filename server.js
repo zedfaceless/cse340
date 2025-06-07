@@ -4,11 +4,13 @@ const path = require("path");
 const dotenv = require("dotenv").config();
 const session = require("express-session");
 const flash = require("connect-flash");
+const cookieParser = require("cookie-parser");
 
+// ✅ Require utilities for JWT middleware
 const utilities = require("./utilities/");
 const baseController = require("./controllers/baseController");
 
-// ✅ Load routers (ensure each of these exports an Express Router directly)
+// ✅ Load routers
 const inventoryRouter = require("./routes/inventory");
 const staticRoutes = require("./routes/static");
 const accountRoute = require("./routes/accountRoutes");
@@ -17,12 +19,15 @@ const app = express();
 
 // ====== MIDDLEWARE SETUP ====== //
 
-// Parse form data
+// Parse form data and JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Serve static files
 app.use(express.static("public"));
+
+// ✅ Setup cookie parser middleware
+app.use(cookieParser());
 
 // Setup session and flash middleware
 app.use(
@@ -33,10 +38,12 @@ app.use(
     cookie: { maxAge: 1000 * 60 * 60 * 24 }, // 1 day
   })
 );
-
 app.use(flash());
 
-// Make flash messages & validation errors globally available
+// ✅ Use JWT validation middleware globally
+app.use(utilities.checkJWTToken);
+
+// Flash message + validation messages middleware
 app.use((req, res, next) => {
   res.locals.message = req.flash("message");
   res.locals.errors = req.flash("errors");
@@ -44,14 +51,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// Make nav available to all views
+// Inject nav menu into all views
 app.use(async (req, res, next) => {
   try {
     res.locals.nav = await utilities.getNav(req.originalUrl);
   } catch (error) {
     console.error("Error getting navigation:", error.message);
-    res.locals.nav =
-      '<ul><li><a href="/" title="Home page">Home</a></li></ul>';
+    res.locals.nav = '<ul><li><a href="/" title="Home page">Home</a></li></ul>';
   }
   next();
 });
