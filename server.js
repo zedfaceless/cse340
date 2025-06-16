@@ -34,7 +34,13 @@ app.use(
 );
 app.use(flash());
 
-// ✅ Apply JWT middleware globally
+// ─── Initialize loggedin default ─────────────────────────────────────
+app.use((req, res, next) => {
+  res.locals.loggedin = 0;        // ensure it's always defined
+  next();
+});
+
+// ✅ Apply JWT middleware globally (sets res.locals.loggedin = 1 on success)
 app.use(utilities.checkJWTToken);
 
 // Middleware to expose flash messages to views

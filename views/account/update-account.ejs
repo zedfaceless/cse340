@@ -1,83 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Update Account</title>
-  <link rel="stylesheet" href="/css/styles.css" media="screen" />
-</head>
-<body>
-  <!-- Header partial should contain site title, nav, etc. -->
-  <%- include('../partials/header') %>
+<!-- views/account/update-account.ejs -->
 
-  <main>
-    <h1>Update Account Information</h1>
+<main class="account-update-container">
+  <h1>Update Account Information</h1>
 
-    <% if (notice && notice.length > 0) { %>
-      <div class="flash-message">
-        <% notice.forEach(function(msg) { %>
-          <p><%= msg %></p>
+  <!-- Success messages -->
+  <% if (success && success.length) { %>
+    <div class="flash-message success">
+      <% success.forEach(msg => { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Validation errors -->
+  <% if (errors && errors.length) { %>
+    <div class="form-errors">
+      <ul>
+        <% errors.forEach(err => { %>
+          <li><%= err.msg %></li>
         <% }) %>
-      </div>
-    <% } %>
+      </ul>
+    </div>
+  <% } %>
 
-    <% if (errors && errors.length > 0) { %>
-      <div class="form-errors">
-        <ul>
-          <% errors.forEach(function(error) { %>
-            <li><%= error.msg %></li>
-          <% }) %>
-        </ul>
-      </div>
-    <% } %>
+  <!-- ===== Account Info Update ===== -->
+  <form action="/account/update/<%= accountData.account_id %>" method="post" novalidate>
+    <fieldset>
+      <legend>Account Details</legend>
 
-    <!-- ===== Update Account Info Form ===== -->
-    <form action="/account/update/<%= accountData.account_id %>" method="post">
-      <fieldset>
-        <legend>Account Details</legend>
+      <label for="account_firstname">First Name</label>
+      <input
+        type="text"
+        id="account_firstname"
+        name="account_firstname"
+        required
+        value="<%= typeof account_firstname !== 'undefined' ? account_firstname : accountData.account_firstname %>"
+      >
 
-        <label for="account_firstname">First Name</label>
-        <input type="text" id="account_firstname" name="account_firstname" required
-          value="<%= typeof account_firstname !== 'undefined' ? account_firstname : accountData.account_firstname %>" />
+      <label for="account_lastname">Last Name</label>
+      <input
+        type="text"
+        id="account_lastname"
+        name="account_lastname"
+        required
+        value="<%= typeof account_lastname !== 'undefined' ? account_lastname : accountData.account_lastname %>"
+      >
 
-        <label for="account_lastname">Last Name</label>
-        <input type="text" id="account_lastname" name="account_lastname" required
-          value="<%= typeof account_lastname !== 'undefined' ? account_lastname : accountData.account_lastname %>" />
+      <label for="account_email">Email</label>
+      <input
+        type="email"
+        id="account_email"
+        name="account_email"
+        required
+        value="<%= typeof account_email !== 'undefined' ? account_email : accountData.account_email %>"
+      >
 
-        <label for="account_email">Email</label>
-        <input type="email" id="account_email" name="account_email" required
-          value="<%= typeof account_email !== 'undefined' ? account_email : accountData.account_email %>" />
+      <input type="hidden" name="account_id" value="<%= accountData.account_id %>">
 
-        <input type="hidden" name="account_id" value="<%= accountData.account_id %>">
+      <button type="submit">Update Info</button>
+    </fieldset>
+  </form>
 
-        <button type="submit">Update Info</button>
-      </fieldset>
-    </form>
+  <!-- ===== Password Change ===== -->
+  <form action="/account/update-password/<%= accountData.account_id %>" method="post" novalidate>
+    <fieldset>
+      <legend>Change Password</legend>
 
-    <!-- ===== Update Password Form ===== -->
-    <form action="/account/update-password/<%= accountData.account_id %>" method="post">
-      <fieldset>
-        <legend>Change Password</legend>
+      <p class="info-text">
+        Enter a new password (at least 12 characters, including uppercase, lowercase, number, and special character).
+      </p>
 
-        <label for="account_password">New Password</label>
-        <input type="password" id="account_password" name="account_password" required
-          pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#\$%\^&\*]).{12,}$"
-          title="Password must be at least 12 characters, including uppercase, lowercase, number, and special character."
-          placeholder="At least 12 chars, include #, A-Z, a-z, 0-9" />
+      <label for="account_password">New Password</label>
+      <input
+        type="password"
+        id="account_password"
+        name="account_password"
+        required
+        pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$"
+        title="12+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special"
+        placeholder="At least 12 chars, include #, A-Z, a-z, 0-9"
+      >
 
-        <p class="info-text">
-          Entering a password here will change your current password. It must be at least 12 characters long, and include an uppercase letter, a lowercase letter, a number, and a special character.
-        </p>
+      <input type="hidden" name="account_id" value="<%= accountData.account_id %>">
 
-        <input type="hidden" name="account_id" value="<%= accountData.account_id %>">
+      <button type="submit">Update Password</button>
+    </fieldset>
+  </form>
 
-        <button type="submit">Update Password</button>
-      </fieldset>
-    </form>
-
-    <p><a href="/account">← Back to Account Management</a></p>
-  </main>
-
-  <%- include('../partials/footer') %>
-</body>
-</html>
+  <p class="back-link"><a href="/account">← Back to Account Management</a></p>
+</main>

@@ -1,3 +1,5 @@
+// routes/accountRoutes.js
+
 const express = require("express");
 const router = new express.Router();
 const accountController = require("../controllers/accountController");
@@ -21,8 +23,6 @@ router.get(
 router.get(
   "/update/:accountId",
   utilities.checkJWTToken,
-  // Optional: ensure logged-in user (requires requireLogin in utilities)
-  // utilities.requireLogin,
   utilities.handleErrors(accountController.buildUpdateAccountForm)
 );
 
@@ -38,7 +38,7 @@ router.post(
 router.post(
   "/update-password/:accountId",
   regValidate.updatePasswordRules(),
-  regValidate.checkPasswordUpdate,
+  regValidate.checkPasswordData,
   utilities.handleErrors(accountController.updatePassword)
 );
 
@@ -53,12 +53,12 @@ router.post(
 // Route to handle registration process
 router.post(
   "/register",
-  regValidate.registationRules(),
+  regValidate.registrationRules(),
   regValidate.checkRegData,
   utilities.handleErrors(accountController.registerAccount)
 );
 
-// Route to handle logout
-router.get("/logout", utilities.handleErrors(accountController.logout));
+// 🔑 Corrected logout function name
+router.get("/logout", utilities.handleErrors(accountController.logoutAccount));
 
 module.exports = router;

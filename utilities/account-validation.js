@@ -9,18 +9,16 @@ const validate = {};
 // ===========================
 // Validation rules for login
 // ===========================
-validate.loginRules = () => {
-  return [
-    body("account_email")
-      .trim()
-      .isEmail()
-      .withMessage("Please enter a valid email address."),
-    body("account_password")
-      .trim()
-      .isLength({ min: 12 })
-      .withMessage("Password must be at least 12 characters."),
-  ];
-};
+validate.loginRules = () => [
+  body("account_email")
+    .trim()
+    .isEmail()
+    .withMessage("Please enter a valid email address."),
+  body("account_password")
+    .trim()
+    .isLength({ min: 12 })
+    .withMessage("Password must be at least 12 characters."),
+];
 
 // ==============================
 // Check for login validation errors
@@ -30,7 +28,7 @@ validate.checkLoginData = async (req, res, next) => {
   const { account_email } = req.body;
 
   if (!errors.isEmpty()) {
-    const nav = await utilities.getNav();
+    const nav = await utilities.getNav(req.session.accountData);
     return res.render("account/login", {
       title: "Login",
       nav,
@@ -43,31 +41,87 @@ validate.checkLoginData = async (req, res, next) => {
 };
 
 // ===================================
+// Validation rules for registration
+// ===================================
+validate.registrationRules = () => [
+  body("account_firstname")
+    .trim()
+    .notEmpty()
+    .withMessage("First name is required."),
+  body("account_lastname")
+    .trim()
+    .notEmpty()
+    .withMessage("Last name is required."),
+  body("account_email")
+    .trim()
+    .isEmail()
+    .withMessage("A valid email is required.")
+    .custom(async (email) => {
+      const existing = await accountModel.getAccountByEmail(email);
+      if (existing) {
+        throw new Error("That email is already registered.");
+      }
+    }),
+  body("account_password")
+    .trim()
+    .isLength({ min: 12 })
+    .withMessage("Password must be at least 12 characters.")
+    .matches(/(?=.*\d)/)
+    .withMessage("Password must contain at least one digit.")
+    .matches(/(?=.*[a-z])/)
+    .withMessage("Password must contain at least one lowercase letter.")
+    .matches(/(?=.*[A-Z])/)
+    .withMessage("Password must contain at least one uppercase letter.")
+    .matches(/(?=.*[^a-zA-Z0-9])/)
+    .withMessage("Password must contain at least one special character."),
+];
+
+// ===================================
+// Check for registration validation errors
+// ===================================
+validate.checkRegData = async (req, res, next) => {
+  const errors = validationResult(req);
+  const { account_firstname, account_lastname, account_email } = req.body;
+
+  if (!errors.isEmpty()) {
+    const nav = await utilities.getNav(req.session.accountData);
+    return res.render("account/register", {
+      title: "Register",
+      nav,
+      errors: errors.array(),
+      account_firstname,
+      account_lastname,
+      account_email,
+    });
+  }
+
+  next();
+};
+
+// ===================================
 // Validation rules for account update
 // ===================================
-validate.updateAccountRules = () => {
-  return [
-    body("account_firstname")
-      .trim()
-      .notEmpty()
-      .withMessage("First name is required."),
-    body("account_lastname")
-      .trim()
-      .notEmpty()
-      .withMessage("Last name is required."),
-    body("account_email")
-      .trim()
-      .isEmail()
-      .withMessage("A valid email is required.")
-      .custom(async (account_email, { req }) => {
-        const existingAccount = await accountModel.getAccountByEmail(account_email);
-        const currentId = parseInt(req.params.accountId);
-        if (existingAccount && existingAccount.account_id !== currentId) {
-          throw new Error("That email is already in use. Please use a different one.");
-        }
-      }),
-  ];
-};
+validate.updateAccountRules = () => [
+  body("account_firstname")
+    .trim()
+    .notEmpty()
+    .withMessage("First name is required."),
+  body("account_lastname")
+    .trim()
+    .notEmpty()
+    .withMessage("Last name is required."),
+  body("account_email")
+    .trim()
+    .isEmail()
+    .withMessage("A valid email is required.")
+    .custom(async (account_email, { req }) => {
+      const existingAccount = await accountModel.getAccountByEmail(account_email);
+      const currentId = parseInt(req.params.accountId, 10);
+      if (existingAccount && existingAccount.account_id !== currentId) {
+        throw new Error("That email is already in use. Please use a different one.");
+      }
+    }),
+];
 
 // ===================================
 // Middleware to check update errors
@@ -99,22 +153,20 @@ validate.checkUpdateAccountData = async (req, res, next) => {
 // ======================================
 // Validation for password update form
 // ======================================
-validate.passwordRules = () => {
-  return [
-    body("account_password")
-      .trim()
-      .isLength({ min: 12 })
-      .withMessage("Password must be at least 12 characters.")
-      .matches(/(?=.*\d)/)
-      .withMessage("Password must contain at least one digit.")
-      .matches(/(?=.*[a-z])/)
-      .withMessage("Password must contain at least one lowercase letter.")
-      .matches(/(?=.*[A-Z])/)
-      .withMessage("Password must contain at least one uppercase letter.")
-      .matches(/(?=.*[^a-zA-Z0-9])/)
-      .withMessage("Password must contain at least one special character."),
-  ];
-};
+validate.updatePasswordRules = () => [
+  body("account_password")
+    .trim()
+    .isLength({ min: 12 })
+    .withMessage("Password must be at least 12 characters.")
+    .matches(/(?=.*\d)/)
+    .withMessage("Password must contain at least one digit.")
+    .matches(/(?=.*[a-z])/)
+    .withMessage("Password must contain at least one lowercase letter.")
+    .matches(/(?=.*[A-Z])/)
+    .withMessage("Password must contain at least one uppercase letter.")
+    .matches(/(?=.*[^a-zA-Z0-9])/)
+    .withMessage("Password must contain at least one special character."),
+];
 
 validate.checkPasswordData = async (req, res, next) => {
   const errors = validationResult(req);
