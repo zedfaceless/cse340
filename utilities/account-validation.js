@@ -151,7 +151,7 @@ validate.checkUpdateAccountData = async (req, res, next) => {
 };
 
 // ======================================
-// Validation for password update form
+// Validation rules for password update
 // ======================================
 validate.updatePasswordRules = () => [
   body("account_password")
@@ -168,6 +168,9 @@ validate.updatePasswordRules = () => [
     .withMessage("Password must contain at least one special character."),
 ];
 
+// ======================================
+// Middleware to check password update errors
+// ======================================
 validate.checkPasswordData = async (req, res, next) => {
   const errors = validationResult(req);
   const accountId = req.params.accountId;

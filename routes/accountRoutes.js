@@ -53,12 +53,12 @@ router.post(
 // Route to handle registration process
 router.post(
   "/register",
-  regValidate.registrationRules(),
+  regValidate.registrationRules(), // ✅ Ensure this is defined and exported
   regValidate.checkRegData,
   utilities.handleErrors(accountController.registerAccount)
 );
 
-// 🔑 Corrected logout function name
+// Route to handle logout
 router.get("/logout", utilities.handleErrors(accountController.logoutAccount));
 
 module.exports = router;
