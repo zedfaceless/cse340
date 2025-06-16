@@ -1,29 +1,64 @@
-// cse340/routes/accountRoutes.js
 const express = require("express");
-const router = express.Router();
-
+const router = new express.Router();
 const accountController = require("../controllers/accountController");
-const regValidate = require("../utilities/account-validation");
 const utilities = require("../utilities/");
+const regValidate = require("../utilities/account-validation");
 
-// Route to display the login page
-router.get("/login", accountController.buildLogin);
+// Route to build login view
+router.get("/login", utilities.handleErrors(accountController.buildLogin));
 
-// Route to display the registration page
-router.get("/register", accountController.buildRegister);
+// Route to build registration view
+router.get("/register", utilities.handleErrors(accountController.buildRegister));
 
-// Route to handle registration form submission
-router.post("/register", accountController.registerAccount);
-
-// Route to handle login form submission with validation middleware
-router.post(
-  "/login",
-  regValidate.loginRules(),     // Validation rules for login input
-  regValidate.checkLoginData,   // Middleware to check validation results
-  utilities.handleErrors(accountController.accountLogin) // Controller with error handling
+// Route to build account management view
+router.get(
+  "/",
+  utilities.checkJWTToken,
+  utilities.handleErrors(accountController.buildAccountManagement)
 );
 
-// ✅ Route to handle logout and clear cookie
-router.get("/logout", accountController.logoutAccount);
+// Route to build update account view
+router.get(
+  "/update/:accountId",
+  utilities.checkJWTToken,
+  // Optional: ensure logged-in user (requires requireLogin in utilities)
+  // utilities.requireLogin,
+  utilities.handleErrors(accountController.buildUpdateAccountForm)
+);
+
+// Route to handle account information update
+router.post(
+  "/update/:accountId",
+  regValidate.updateAccountRules(),
+  regValidate.checkUpdateAccountData,
+  utilities.handleErrors(accountController.updateAccount)
+);
+
+// Route to handle password update
+router.post(
+  "/update-password/:accountId",
+  regValidate.updatePasswordRules(),
+  regValidate.checkPasswordUpdate,
+  utilities.handleErrors(accountController.updatePassword)
+);
+
+// Route to handle login process
+router.post(
+  "/login",
+  regValidate.loginRules(),
+  regValidate.checkLoginData,
+  utilities.handleErrors(accountController.accountLogin)
+);
+
+// Route to handle registration process
+router.post(
+  "/register",
+  regValidate.registationRules(),
+  regValidate.checkRegData,
+  utilities.handleErrors(accountController.registerAccount)
+);
+
+// Route to handle logout
+router.get("/logout", utilities.handleErrors(accountController.logout));
 
 module.exports = router;

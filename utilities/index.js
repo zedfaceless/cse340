@@ -2,7 +2,6 @@ const invModel = require("../models/inventory-model");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-// Escape HTML for safety
 function escapeHtml(text) {
   return text
     ?.toString()
@@ -13,21 +12,25 @@ function escapeHtml(text) {
     .replace(/'/g, "&#039;");
 }
 
-// Build navigation menu (optionally with currentPath for context)
-async function getNav(currentPath = "") {
+async function getNav(accountData = null) {
   try {
     const data = await invModel.getClassifications();
 
     let nav = `<ul>`;
     nav += `<li><a href="/" title="Home page">Home</a></li>`;
 
-    // Show "New Cars" tab only for /inventory routes
-    if (currentPath.startsWith("/inventory")) {
-      nav += `<li><a href="/inventory" title="Inventory Home">New Cars</a></li>`;
+    // ✅ Only show New Cars if Admin/Employee
+    if (
+      accountData &&
+      (accountData.account_type === "Admin" || accountData.account_type === "Employee")
+    ) {
+      nav += `<li><a href="/inventory" title="Inventory Management">New Cars</a></li>`;
     }
 
     data.forEach((row) => {
-      nav += `<li><a href="/inventory/type/${row.classification_id}" title="See our ${escapeHtml(row.classification_name)} vehicles">${escapeHtml(row.classification_name)}</a></li>`;
+      nav += `<li><a href="/inventory/type/${row.classification_id}" title="See our ${escapeHtml(
+        row.classification_name
+      )} vehicles">${escapeHtml(row.classification_name)}</a></li>`;
     });
 
     nav += `</ul>`;
@@ -38,18 +41,23 @@ async function getNav(currentPath = "") {
   }
 }
 
-// Build vehicle grid for classification views
 function buildClassificationGrid(data) {
   let grid = '<ul id="inv-display">';
   data.forEach((vehicle) => {
     grid += `
       <li>
-        <a href="/inventory/detail/${vehicle.inv_id}" title="View ${escapeHtml(vehicle.inv_make)} ${escapeHtml(vehicle.inv_model)} details">
-          <img src="${vehicle.inv_thumbnail}" alt="Image of ${escapeHtml(vehicle.inv_make)} ${escapeHtml(vehicle.inv_model)} on CSE Motors">
+        <a href="/inventory/detail/${vehicle.inv_id}" title="View ${escapeHtml(
+      vehicle.inv_make
+    )} ${escapeHtml(vehicle.inv_model)} details">
+          <img src="${vehicle.inv_thumbnail}" alt="Image of ${escapeHtml(
+      vehicle.inv_make
+    )} ${escapeHtml(vehicle.inv_model)} on CSE Motors">
         </a>
         <div class="namePrice">
           <h2>
-            <a href="/inventory/detail/${vehicle.inv_id}" title="View ${escapeHtml(vehicle.inv_make)} ${escapeHtml(vehicle.inv_model)} details">
+            <a href="/inventory/detail/${vehicle.inv_id}" title="View ${escapeHtml(
+      vehicle.inv_make
+    )} ${escapeHtml(vehicle.inv_model)} details">
               ${escapeHtml(vehicle.inv_make)} ${escapeHtml(vehicle.inv_model)}
             </a>
           </h2>
@@ -58,23 +66,25 @@ function buildClassificationGrid(data) {
       </li>
     `;
   });
-  grid += '</ul>';
+  grid += "</ul>";
   return grid;
 }
 
-// Build full vehicle detail HTML
 function buildVehicleDetailHTML(vehicle) {
-  const priceFormatted = vehicle.inv_price?.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-  }) || "N/A";
+  const priceFormatted =
+    vehicle.inv_price?.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+    }) || "N/A";
 
   const mileageFormatted = vehicle.inv_miles?.toLocaleString("en-US") || "N/A";
 
   return `
     <div class="vehicle-detail-container">
       <div class="vehicle-image">
-        <img src="${vehicle.inv_image}" alt="Image of ${escapeHtml(vehicle.inv_make)} ${escapeHtml(vehicle.inv_model)}" />
+        <img src="${vehicle.inv_image}" alt="Image of ${escapeHtml(
+    vehicle.inv_make
+  )} ${escapeHtml(vehicle.inv_model)}" />
       </div>
       <div class="vehicle-info">
         <h1>${escapeHtml(vehicle.inv_make)} ${escapeHtml(vehicle.inv_model)}</h1>
@@ -88,35 +98,42 @@ function buildVehicleDetailHTML(vehicle) {
   `;
 }
 
-// Wrap controller functions in error handler
 function handleErrors(fn) {
   return function (req, res, next) {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
 
-/* ****************************************
- * Middleware to check JWT token validity
- **************************************** */
 function checkJWTToken(req, res, next) {
   if (req.cookies && req.cookies.jwt) {
-    jwt.verify(
-      req.cookies.jwt,
-      process.env.ACCESS_TOKEN_SECRET,
-      function (err, accountData) {
-        if (err) {
-          req.flash("message", "Please log in");
-          res.clearCookie("jwt");
-          return res.redirect("/account/login");
-        }
-        res.locals.accountData = accountData;
-        res.locals.loggedin = 1;
-        next();
+    jwt.verify(req.cookies.jwt, process.env.ACCESS_TOKEN_SECRET, (err, accountData) => {
+      if (err) {
+        req.flash("message", "Session expired. Please log in again.");
+        res.clearCookie("jwt");
+        return res.redirect("/account/login");
       }
-    );
+      res.locals.accountData = accountData;
+      res.locals.loggedin = 1;
+      req.session.accountData = accountData; // ✅ Set session for consistency
+      next();
+    });
   } else {
     next();
   }
+}
+
+function checkAccountType(req, res, next) {
+  // Prefer accountData from res.locals, fallback to session
+  const account =
+    res.locals.accountData || req.session.accountData;
+
+  if (account && (account.account_type === "Admin" || account.account_type === "Employee")) {
+    res.locals.accountData = account; // Ensure nav still works
+    return next();
+  }
+
+  req.flash("message", "You must be logged in with Admin or Employee privileges.");
+  return res.redirect("/account/login");
 }
 
 module.exports = {
@@ -124,5 +141,6 @@ module.exports = {
   buildClassificationGrid,
   buildVehicleDetailHTML,
   handleErrors,
-  checkJWTToken, // export the middleware here
+  checkJWTToken,
+  checkAccountType,
 };

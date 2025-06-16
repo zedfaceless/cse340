@@ -1,40 +1,58 @@
 const express = require('express');
 const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
-const invVal = require('../utilities/inventory-validation'); // Validation middleware
+const invVal = require('../utilities/inventory-validation');
+const utilities = require('../utilities');
 
-// Route to display all vehicle classifications
-router.get('/classifications', inventoryController.buildInventory);
+// ✅ Public routes
+router.get(
+  '/classifications',
+  utilities.handleErrors(inventoryController.buildInventory)
+);
 
-// Route to show vehicles by classification/type
-router.get('/type/:classification_id', inventoryController.buildByClassificationId); // ✅ updated
+router.get(
+  '/type/:classification_id',
+  utilities.handleErrors(inventoryController.buildByClassificationId)
+);
 
-// Route to show vehicle detail view
-router.get('/detail/:inv_id', inventoryController.buildVehicleDetailView);
+router.get(
+  '/detail/:inv_id',
+  utilities.handleErrors(inventoryController.buildVehicleDetailView)
+);
 
-// Route to show add classification form
-router.get('/add-classification', inventoryController.showAddClassificationForm);
+// 🔐 Protected routes — Admin or Employee only
+router.get(
+  '/',
+  utilities.checkAccountType,
+  utilities.handleErrors(inventoryController.showManagementView)
+);
 
-// Route to process add classification form submission with validation
+router.get(
+  '/add-classification',
+  utilities.checkAccountType,
+  utilities.handleErrors(inventoryController.showAddClassificationForm)
+);
+
 router.post(
   '/add-classification',
+  utilities.checkAccountType,
   invVal.classificationRules(),
   invVal.checkClassificationData,
-  inventoryController.addClassification
+  utilities.handleErrors(inventoryController.addClassification)
 );
 
-// Route to show add inventory form
-router.get('/add-inventory', inventoryController.showAddInventoryForm);
+router.get(
+  '/add-inventory',
+  utilities.checkAccountType,
+  utilities.handleErrors(inventoryController.showAddInventoryForm)
+);
 
-// Route to process add inventory form submission with validation
 router.post(
   '/add-inventory',
+  utilities.checkAccountType,
   invVal.inventoryRules(),
   invVal.checkInventoryData,
-  inventoryController.addInventoryItem
+  utilities.handleErrors(inventoryController.addInventoryItem)
 );
-
-// Route to show inventory management view
-router.get('/', inventoryController.showManagementView);
 
 module.exports = router;

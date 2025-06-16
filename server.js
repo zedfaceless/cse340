@@ -6,7 +6,7 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const cookieParser = require("cookie-parser");
 
-// ✅ Require utilities for JWT middleware
+// ✅ Load utilities for JWT and nav
 const utilities = require("./utilities/");
 const baseController = require("./controllers/baseController");
 
@@ -18,18 +18,12 @@ const accountRoute = require("./routes/accountRoutes");
 const app = express();
 
 // ====== MIDDLEWARE SETUP ====== //
-
-// Parse form data and JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// Serve static files
 app.use(express.static("public"));
-
-// ✅ Setup cookie parser middleware
 app.use(cookieParser());
 
-// Setup session and flash middleware
+// Session and flash setup
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "defaultSecretKey123!",
@@ -40,10 +34,10 @@ app.use(
 );
 app.use(flash());
 
-// ✅ Use JWT validation middleware globally
+// ✅ Apply JWT middleware globally
 app.use(utilities.checkJWTToken);
 
-// Flash message + validation messages middleware
+// Middleware to expose flash messages to views
 app.use((req, res, next) => {
   res.locals.message = req.flash("message");
   res.locals.errors = req.flash("errors");
@@ -51,10 +45,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Inject nav menu into all views
+// ✅ Inject nav menu with account info
 app.use(async (req, res, next) => {
   try {
-    res.locals.nav = await utilities.getNav(req.originalUrl);
+    const accountData = req.session.accountData || null;
+    res.locals.nav = await utilities.getNav(accountData);
   } catch (error) {
     console.error("Error getting navigation:", error.message);
     res.locals.nav = '<ul><li><a href="/" title="Home page">Home</a></li></ul>';
@@ -77,7 +72,7 @@ if (typeof staticRoutes === "function") {
   console.error("⚠️ staticRoutes is not a router. Check exports in routes/static.js");
 }
 
-// Redirect old /inv/* paths to new /inventory/*
+// ✅ Redirect old /inv/* paths to /inventory/*
 app.use("/inv", (req, res, next) => {
   const validPaths = [
     "/add-classification",
@@ -86,18 +81,14 @@ app.use("/inv", (req, res, next) => {
     /^\/detail\/\d+$/,
     "/",
   ];
-
   const pathOnly = req.path;
-
   const shouldRedirect = validPaths.some((rule) =>
     typeof rule === "string" ? pathOnly === rule : rule.test(pathOnly)
   );
-
   if (shouldRedirect) {
     const newUrl = req.originalUrl.replace(/^\/inv/, "/inventory");
     return res.redirect(301, newUrl);
   }
-
   next();
 });
 
@@ -126,7 +117,8 @@ app.use((req, res, next) => {
 app.use(async (err, req, res, next) => {
   let nav;
   try {
-    nav = await utilities.getNav();
+    const accountData = req.session.accountData || null;
+    nav = await utilities.getNav(accountData);
   } catch (error) {
     nav = '<ul><li><a href="/" title="Home page">Home</a></li></ul>';
   }

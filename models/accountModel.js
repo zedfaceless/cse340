@@ -14,7 +14,7 @@ async function getAccountByEmail(email) {
   }
 }
 
-// Fetch account by ID (used when decoding JWT)
+// Fetch account by ID
 async function getAccountById(id) {
   try {
     const sql = "SELECT * FROM accounts WHERE account_id = $1";
@@ -43,8 +43,44 @@ async function registerAccount(account_firstname, account_lastname, account_emai
   }
 }
 
+// Update account info (name and email)
+async function updateAccount(accountId, firstname, lastname, email) {
+  try {
+    const sql = `
+      UPDATE accounts
+      SET account_firstname = $1,
+          account_lastname = $2,
+          account_email = $3
+      WHERE account_id = $4
+      RETURNING *`;
+    const values = [firstname, lastname, email, accountId];
+    const result = await pool.query(sql, values);
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error in updateAccount:", error);
+    throw error;
+  }
+}
+
+// Update account password
+async function updatePassword(accountId, hashedPassword) {
+  try {
+    const sql = `
+      UPDATE accounts
+      SET account_password = $1
+      WHERE account_id = $2`;
+    const result = await pool.query(sql, [hashedPassword, accountId]);
+    return result.rowCount; // Should return 1 if successful
+  } catch (error) {
+    console.error("Error in updatePassword:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   getAccountByEmail,
-  getAccountById, // ✅ newly added
+  getAccountById,
   registerAccount,
+  updateAccount,     // ✅ added
+  updatePassword     // ✅ added
 };
