@@ -8,22 +8,31 @@ const favoriteModel = require("../models/favoriteModel.js");
 // Build Views
 // =====================
 
-const buildFavoritesPage = async function (req, res, next) {
+async function buildFavoritesView(req, res) {
   try {
-    const accountId = req.session.accountData.account_id;
-    const favorites = await accountModel.getFavorites(accountId);
-    const nav = await utilities.getNav(req.session.accountData);
+    const account_id = res.locals.accountData.account_id;
+    const favorites = await accountModel.getFavoritesByAccountId(account_id);
 
+    // Fetch vehicle details for each favorite
+    const vehicleDetails = await Promise.all(
+      favorites.map(async (favorite) => {
+        return await invModel.getVehicleById(favorite.inventory_id);
+      })
+    );
+
+    const nav = await utilities.getNav();
     res.render("account/favorites", {
-      title: "My Favorites",
+      title: "My Favorite Vehicles",
       nav,
-      favorites,
-      messages: req.flash(),
+      errors: null,
+      favorites: vehicleDetails,
     });
   } catch (error) {
-    next(error);
+    console.error("Error loading favorites:", error);
+    res.status(500).send("Server Error");
   }
-};
+}
+
 
 async function buildLogin(req, res) {
   const nav = await utilities.getNav(req.session.accountData);
@@ -380,23 +389,22 @@ async function updateAccountInfo(req, res) {
 
 async function showFavorites(req, res) {
   try {
-    const accountId = res.locals.accountData.account_id;
-    const favorites = await accountModel.getFavoritesByAccountId(accountId);
+    const account_id = res.locals.accountData.account_id;
+
+    const favorites = await favoriteModel.getFavoritesByAccountId(account_id);
+
     res.render("account/favorites", {
       title: "My Favorite Vehicles",
       favorites,
-      nav: res.locals.nav,
     });
   } catch (error) {
-    console.error("Error loading favorites:", error);
-    res.status(500).render("errors/error", {
-      title: "Server Error",
-      message: "Failed to load favorites.",
-      nav: res.locals.nav,
+    console.error("Error loading favorites:", error.message);
+    res.render("account/favorites", {
+      title: "My Favorite Vehicles",
+      favorites: [],
     });
   }
 }
-
 
 async function addFavorite(req, res) {
   try {
@@ -407,10 +415,12 @@ async function addFavorite(req, res) {
     req.flash("notice", result ? "Vehicle added to favorites." : "Could not add to favorites.");
     res.redirect("/account/favorites");
   } catch (error) {
-    console.error("Error adding favorite:", error);
-    res.status(500).send("Server Error");
+    console.error("Error adding favorite:", error.message);
+    req.flash("notice", "An error occurred while adding favorite.");
+    res.redirect("/account/favorites");
   }
 }
+
 
 async function removeFavorite(req, res) {
   try {
@@ -439,5 +449,5 @@ module.exports = {
   showFavorites,
   addFavorite,
   removeFavorite,
-  buildFavoritesPage,
+  buildFavoritesView,
 };

@@ -27,19 +27,15 @@ async function getAccountById(id) {
 }
 
 // Get favorite vehicles by account
-async function getFavoritesByAccountId(accountId) {
+async function getFavoritesByAccountId(account_id) {
   try {
     const sql = `
-      SELECT i.inv_id, i.inv_make, i.inv_model, i.inv_year, i.inv_price, i.inv_thumbnail
-      FROM favorites f
-      JOIN inventory i ON f.inv_id = i.inv_id
-      WHERE f.account_id = $1;
+      SELECT inventory_id FROM favorites WHERE account_id = $1
     `;
-    const result = await pool.query(sql, [accountId]);
+    const result = await pool.query(sql, [account_id]);
     return result.rows;
   } catch (error) {
-    console.error("Error in getFavoritesByAccountId:", error);
-    throw error;
+    throw new Error("Failed to get favorites");
   }
 }
 

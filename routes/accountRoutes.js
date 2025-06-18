@@ -58,23 +58,26 @@ router.post(
 );
 
 // Logout
-router.get("/logout", accountController.logoutAccount);
+router.get(
+  "/logout",
+  accountController.logoutAccount
+);
 
 // === ✅ UPDATE ACCOUNT INFO ===
 router.post(
   "/update/:accountId",
-  accountValidation.updateAccountRules(),         // validation: firstName, lastName, email
-  accountValidation.checkUpdateAccountData,       // error check
-  utilities.checkJWTToken,                        // ensure user is logged in
+  accountValidation.updateAccountRules(),
+  accountValidation.checkUpdateAccountData,
+  utilities.checkJWTToken,
   utilities.handleErrors(accountController.updateAccountInfo)
 );
 
 // === ✅ UPDATE ACCOUNT PASSWORD ===
 router.post(
   "/update-password/:accountId",
-  accountValidation.updatePasswordRules(),        // validation: new password required + length
-  accountValidation.checkPasswordData,            // error check
-  utilities.checkJWTToken,                        // ensure user is logged in
+  accountValidation.updatePasswordRules(),
+  accountValidation.checkPasswordData,
+  utilities.checkJWTToken,
   utilities.handleErrors(accountController.updatePassword)
 );
 
