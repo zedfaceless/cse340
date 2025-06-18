@@ -1,0 +1,27 @@
+<h1>My Favorite Vehicles</h1>
+
+<% if (favorites.length > 0) { %>
+  <ul class="favorites-list">
+    <% favorites.forEach(vehicle => { %>
+      <li class="favorite-item" style="margin-bottom: 1.5rem;">
+        <a href="/inventory/detail/<%= vehicle.inv_id %>" style="text-decoration: none; color: inherit;">
+          <img 
+            src="<%= vehicle.inv_thumbnail %>" 
+            alt="<%= vehicle.inv_make %> <%= vehicle.inv_model %>" 
+            style="width:150px; height:auto; display:block; margin-bottom:0.5rem;">
+          <p><%= vehicle.inv_make %> <%= vehicle.inv_model %></p>
+        </a>
+
+        <!-- POST form to remove favorite -->
+        <form action="/account/favorites/remove" method="POST" style="display:inline;">
+          <input type="hidden" name="inv_id" value="<%= vehicle.inv_id %>">
+          <button type="submit" title="Remove from favorites">❌ Remove</button>
+        </form>
+      </li>
+    <% }) %>
+  </ul>
+<% } else { %>
+  <p>You have no favorite vehicles.</p>
+<% } %>
+
+<%- include("../partials/footer") %>

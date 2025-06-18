@@ -20,6 +20,16 @@ CREATE TABLE IF NOT EXISTS public.accounts (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Add Favorites Table
+CREATE TABLE favorites (
+  favorite_id SERIAL PRIMARY KEY,
+  account_id INTEGER NOT NULL REFERENCES accounts(account_id),
+  item_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
 
 -- Create classification table 
 CREATE TABLE IF NOT EXISTS public.classification (

@@ -1,0 +1,1 @@
+router.post("/favorites/add", accountController.addFavorite);

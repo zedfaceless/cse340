@@ -2,10 +2,28 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const utilities = require("../utilities/");
 const accountModel = require("../models/accountModel");
+const favoriteModel = require("../models/favoriteModel.js");
 
 // =====================
 // Build Views
 // =====================
+
+const buildFavoritesPage = async function (req, res, next) {
+  try {
+    const accountId = req.session.accountData.account_id;
+    const favorites = await accountModel.getFavorites(accountId);
+    const nav = await utilities.getNav(req.session.accountData);
+
+    res.render("account/favorites", {
+      title: "My Favorites",
+      nav,
+      favorites,
+      messages: req.flash(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 async function buildLogin(req, res) {
   const nav = await utilities.getNav(req.session.accountData);
@@ -43,17 +61,27 @@ async function buildAccountManagement(req, res) {
 }
 
 async function buildUpdateAccountForm(req, res) {
-  const accountId = req.params.accountId;
-  const accountData = await accountModel.getAccountById(accountId);
-  const nav = await utilities.getNav(req.session.accountData);
+  try {
+    const accountId = req.params.accountId;
+    const accountData = await accountModel.getAccountById(accountId);
+    const nav = await utilities.getNav(req.session.accountData);
 
-  res.render("account/update-account", {
-    title: "Update Account",
-    nav,
-    accountData,
-    errors: [],
-    notice: req.flash("notice"),
-  });
+    if (!accountData) {
+      req.flash("notice", "Account not found.");
+      return res.redirect("/account");
+    }
+
+    res.render("account/update-account", {
+      title: "Update Account",
+      nav,
+      accountData,
+      errors: [],
+      notice: req.flash("notice"),
+    });
+  } catch (error) {
+    console.error("Error building update form:", error);
+    res.status(500).send("Server Error");
+  }
 }
 
 // =====================
@@ -346,6 +374,58 @@ async function updateAccountInfo(req, res) {
   }
 }
 
+// =====================
+// Favorite Vehicle Logic
+// =====================
+
+async function showFavorites(req, res) {
+  try {
+    const accountId = res.locals.accountData.account_id;
+    const favorites = await accountModel.getFavoritesByAccountId(accountId);
+    res.render("account/favorites", {
+      title: "My Favorite Vehicles",
+      favorites,
+      nav: res.locals.nav,
+    });
+  } catch (error) {
+    console.error("Error loading favorites:", error);
+    res.status(500).render("errors/error", {
+      title: "Server Error",
+      message: "Failed to load favorites.",
+      nav: res.locals.nav,
+    });
+  }
+}
+
+
+async function addFavorite(req, res) {
+  try {
+    const { vehicle_id } = req.body;
+    const accountId = req.session.accountData.account_id;
+
+    const result = await favoriteModel.addFavorite(accountId, vehicle_id);
+    req.flash("notice", result ? "Vehicle added to favorites." : "Could not add to favorites.");
+    res.redirect("/account/favorites");
+  } catch (error) {
+    console.error("Error adding favorite:", error);
+    res.status(500).send("Server Error");
+  }
+}
+
+async function removeFavorite(req, res) {
+  try {
+    const { vehicle_id } = req.body;
+    const accountId = req.session.accountData.account_id;
+
+    const result = await favoriteModel.removeFavorite(accountId, vehicle_id);
+    req.flash("notice", result ? "Favorite removed successfully." : "Failed to remove favorite.");
+    res.redirect("/account/favorites");
+  } catch (error) {
+    console.error("Error removing favorite:", error);
+    res.status(500).send("Server Error");
+  }
+}
+
 module.exports = {
   buildLogin,
   buildRegister,
@@ -356,4 +436,8 @@ module.exports = {
   logoutAccount,
   updatePassword,
   updateAccountInfo,
+  showFavorites,
+  addFavorite,
+  removeFavorite,
+  buildFavoritesPage,
 };

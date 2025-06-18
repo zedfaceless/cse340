@@ -13,7 +13,7 @@ async function showManagementView(req, res) {
   });
 }
 
-// Render classification listing (just list of classification names)
+// Render classification listing
 async function buildInventory(req, res, next) {
   try {
     const classificationList = await inventoryModel.getClassifications();
@@ -28,7 +28,7 @@ async function buildInventory(req, res, next) {
   }
 }
 
-// ✅ Render vehicles under a classification ID (uses grid)
+// Render vehicles by classification ID
 async function buildByClassificationId(req, res, next) {
   try {
     const classificationId = req.params.classification_id;
@@ -51,7 +51,7 @@ async function buildByClassificationId(req, res, next) {
   }
 }
 
-// Render vehicle details
+// ✅ FIXED: Render vehicle details and pass login info to EJS
 async function buildVehicleDetailView(req, res, next) {
   try {
     const inv_id = req.params.inv_id;
@@ -68,10 +68,16 @@ async function buildVehicleDetailView(req, res, next) {
       vehicleData.inv_image = '/images/vehicles/no-image-available.jpg';
     }
 
+    // Extract login status and account_id
+    const loggedIn = res.locals.accountData ? true : false;
+    const account_id = loggedIn ? res.locals.accountData.account_id : null;
+
     res.render('inventory/details', {
       title: `${vehicleData.inv_make} ${vehicleData.inv_model}`,
       vehicle: vehicleData,
       nav: res.locals.nav,
+      loggedIn,
+      account_id,
     });
   } catch (error) {
     next(error);

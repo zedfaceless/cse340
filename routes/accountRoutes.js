@@ -1,64 +1,95 @@
-// routes/accountRoutes.js
-
 const express = require("express");
 const router = new express.Router();
-const accountController = require("../controllers/accountController");
+const accountController = require("../controllers/accountController.js");
 const utilities = require("../utilities/");
-const regValidate = require("../utilities/account-validation");
+const accountValidation = require("../utilities/account-validation");
 
-// Route to build login view
-router.get("/login", utilities.handleErrors(accountController.buildLogin));
+// ----------- Account Views -----------
 
-// Route to build registration view
-router.get("/register", utilities.handleErrors(accountController.buildRegister));
+// Login View
+router.get(
+  "/login",
+  utilities.handleErrors(accountController.buildLogin)
+);
 
-// Route to build account management view
+// Registration View
+router.get(
+  "/register",
+  utilities.handleErrors(accountController.buildRegister)
+);
+
+// Account Management Dashboard
 router.get(
   "/",
   utilities.checkJWTToken,
   utilities.handleErrors(accountController.buildAccountManagement)
 );
 
-// Route to build update account view
+// Update Account Form View
 router.get(
   "/update/:accountId",
   utilities.checkJWTToken,
   utilities.handleErrors(accountController.buildUpdateAccountForm)
 );
 
-// Route to handle account information update
-router.post(
-  "/update/:accountId",
-  regValidate.updateAccountRules(),
-  regValidate.checkUpdateAccountData,
-  utilities.handleErrors(accountController.updateAccount)
+// My Favorite Vehicles View
+router.get(
+  "/favorites",
+  utilities.checkLogin,
+  utilities.handleErrors(accountController.showFavorites)
 );
 
-// Route to handle password update
-router.post(
-  "/update-password/:accountId",
-  regValidate.updatePasswordRules(),
-  regValidate.checkPasswordData,
-  utilities.handleErrors(accountController.updatePassword)
-);
+// ----------- Account Actions -----------
 
-// Route to handle login process
-router.post(
-  "/login",
-  regValidate.loginRules(),
-  regValidate.checkLoginData,
-  utilities.handleErrors(accountController.accountLogin)
-);
-
-// Route to handle registration process
+// Register New Account
 router.post(
   "/register",
-  regValidate.registrationRules(), // ✅ Ensure this is defined and exported
-  regValidate.checkRegData,
+  accountValidation.registrationRules(),
+  accountValidation.checkRegData,
   utilities.handleErrors(accountController.registerAccount)
 );
 
-// Route to handle logout
-router.get("/logout", utilities.handleErrors(accountController.logoutAccount));
+// Login
+router.post(
+  "/login",
+  accountValidation.loginRules(),
+  accountValidation.checkLoginData,
+  utilities.handleErrors(accountController.accountLogin)
+);
+
+// Logout
+router.get("/logout", accountController.logoutAccount);
+
+// === ✅ UPDATE ACCOUNT INFO ===
+router.post(
+  "/update/:accountId",
+  accountValidation.updateAccountRules(),         // validation: firstName, lastName, email
+  accountValidation.checkUpdateAccountData,       // error check
+  utilities.checkJWTToken,                        // ensure user is logged in
+  utilities.handleErrors(accountController.updateAccountInfo)
+);
+
+// === ✅ UPDATE ACCOUNT PASSWORD ===
+router.post(
+  "/update-password/:accountId",
+  accountValidation.updatePasswordRules(),        // validation: new password required + length
+  accountValidation.checkPasswordData,            // error check
+  utilities.checkJWTToken,                        // ensure user is logged in
+  utilities.handleErrors(accountController.updatePassword)
+);
+
+// === ✅ ADD A FAVORITE VEHICLE ===
+router.post(
+  "/favorites/add",
+  utilities.checkJWTToken,
+  utilities.handleErrors(accountController.addFavorite)
+);
+
+// === ✅ REMOVE A FAVORITE VEHICLE ===
+router.post(
+  "/favorites/remove",
+  utilities.checkJWTToken,
+  utilities.handleErrors(accountController.removeFavorite)
+);
 
 module.exports = router;

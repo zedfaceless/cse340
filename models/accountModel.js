@@ -26,6 +26,23 @@ async function getAccountById(id) {
   }
 }
 
+// Get favorite vehicles by account
+async function getFavoritesByAccountId(accountId) {
+  try {
+    const sql = `
+      SELECT i.inv_id, i.inv_make, i.inv_model, i.inv_year, i.inv_price, i.inv_thumbnail
+      FROM favorites f
+      JOIN inventory i ON f.inv_id = i.inv_id
+      WHERE f.account_id = $1;
+    `;
+    const result = await pool.query(sql, [accountId]);
+    return result.rows;
+  } catch (error) {
+    console.error("Error in getFavoritesByAccountId:", error);
+    throw error;
+  }
+}
+
 // Register new account
 async function registerAccount(account_firstname, account_lastname, account_email, hashedPassword) {
   try {
@@ -33,7 +50,8 @@ async function registerAccount(account_firstname, account_lastname, account_emai
       INSERT INTO accounts 
       (account_firstname, account_lastname, account_email, account_password)
       VALUES ($1, $2, $3, $4)
-      RETURNING *`;
+      RETURNING *;
+    `;
     const values = [account_firstname, account_lastname, account_email, hashedPassword];
     const result = await pool.query(sql, values);
     return result.rows[0];
@@ -52,7 +70,8 @@ async function updateAccount(accountId, firstname, lastname, email) {
           account_lastname = $2,
           account_email = $3
       WHERE account_id = $4
-      RETURNING *`;
+      RETURNING *;
+    `;
     const values = [firstname, lastname, email, accountId];
     const result = await pool.query(sql, values);
     return result.rows[0];
@@ -68,11 +87,59 @@ async function updatePassword(accountId, hashedPassword) {
     const sql = `
       UPDATE accounts
       SET account_password = $1
-      WHERE account_id = $2`;
+      WHERE account_id = $2;
+    `;
     const result = await pool.query(sql, [hashedPassword, accountId]);
-    return result.rowCount; // Should return 1 if successful
+    return result.rowCount;
   } catch (error) {
     console.error("Error in updatePassword:", error);
+    throw error;
+  }
+}
+
+// Add favorite vehicle
+async function addFavoriteVehicle(accountId, invId) {
+  try {
+    const sql = `
+      INSERT INTO favorites (account_id, inv_id)
+      VALUES ($1, $2)
+      ON CONFLICT DO NOTHING
+      RETURNING *;
+    `;
+    const result = await pool.query(sql, [accountId, invId]);
+    return result.rowCount > 0;
+  } catch (error) {
+    console.error("Error in addFavoriteVehicle:", error);
+    throw error;
+  }
+}
+
+// Remove favorite vehicle
+async function removeFavoriteVehicle(accountId, invId) {
+  try {
+    const sql = `
+      DELETE FROM favorites
+      WHERE account_id = $1 AND inv_id = $2;
+    `;
+    const result = await pool.query(sql, [accountId, invId]);
+    return result.rowCount > 0;
+  } catch (error) {
+    console.error("Error in removeFavoriteVehicle:", error);
+    throw error;
+  }
+}
+
+// Check if vehicle is already a favorite
+async function isFavoriteVehicle(accountId, invId) {
+  try {
+    const sql = `
+      SELECT * FROM favorites
+      WHERE account_id = $1 AND inv_id = $2;
+    `;
+    const result = await pool.query(sql, [accountId, invId]);
+    return result.rows.length > 0;
+  } catch (error) {
+    console.error("Error in isFavoriteVehicle:", error);
     throw error;
   }
 }
@@ -81,6 +148,10 @@ module.exports = {
   getAccountByEmail,
   getAccountById,
   registerAccount,
-  updateAccount,     // ✅ added
-  updatePassword     // ✅ added
+  updateAccount,
+  updatePassword,
+  addFavoriteVehicle,
+  removeFavoriteVehicle,
+  isFavoriteVehicle,
+  getFavoritesByAccountId
 };

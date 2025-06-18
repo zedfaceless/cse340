@@ -343,6 +343,68 @@ footer {
   margin-top: 1em;
 }
 
+form button {
+  background: none;
+  border: none;
+  color: rgb(56, 33, 185);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 1em;
+}
+
+.favorites-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  padding: 0;
+  list-style: none;
+  margin: 1rem 0;
+}
+
+.favorite-item {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  background-color: #f9f9f9;
+  transition: box-shadow 0.3s ease;
+}
+
+.favorite-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.favorite-item img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.favorite-item p {
+  margin-top: 0.5rem;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #333;
+}
+
+.favorite-item form {
+  margin-top: 0.5rem;
+}
+
+.favorite-item button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.favorite-item button:hover {
+  background-color: #c0392b;
+}
+
 
 
 

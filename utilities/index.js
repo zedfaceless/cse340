@@ -19,7 +19,6 @@ async function getNav(accountData = null) {
     let nav = `<ul>`;
     nav += `<li><a href="/" title="Home page">Home</a></li>`;
 
-    // ✅ Only show New Cars if Admin/Employee
     if (
       accountData &&
       (accountData.account_type === "Admin" || accountData.account_type === "Employee")
@@ -114,7 +113,7 @@ function checkJWTToken(req, res, next) {
       }
       res.locals.accountData = accountData;
       res.locals.loggedin = 1;
-      req.session.accountData = accountData; // ✅ Set session for consistency
+      req.session.accountData = accountData; // ✅ Store for consistency
       next();
     });
   } else {
@@ -123,17 +122,26 @@ function checkJWTToken(req, res, next) {
 }
 
 function checkAccountType(req, res, next) {
-  // Prefer accountData from res.locals, fallback to session
-  const account =
-    res.locals.accountData || req.session.accountData;
+  const account = res.locals.accountData || req.session.accountData;
 
   if (account && (account.account_type === "Admin" || account.account_type === "Employee")) {
-    res.locals.accountData = account; // Ensure nav still works
+    res.locals.accountData = account;
     return next();
   }
 
   req.flash("message", "You must be logged in with Admin or Employee privileges.");
   return res.redirect("/account/login");
+}
+
+function checkLogin(req, res, next) {
+  const accountData = res.locals.accountData || req.session.accountData;
+  if (accountData) {
+    res.locals.accountData = accountData;
+    next();
+  } else {
+    req.flash("message", "Please log in to view this page.");
+    res.redirect("/account/login");
+  }
 }
 
 module.exports = {
@@ -143,4 +151,5 @@ module.exports = {
   handleErrors,
   checkJWTToken,
   checkAccountType,
+  checkLogin, 
 };
